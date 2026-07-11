@@ -1,9 +1,10 @@
--- Lock & Avatars Hub v9.0 (Mobile Sliders Fix)
+-- Lock & Avatars Hub v10.0 (ANTI-DETECT + DRAGGABLE ICON)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
+local TweenService = game:GetService("TweenService")
 
 local SMOOTHNESS = 0.2
 
@@ -12,7 +13,7 @@ screenGui.Name = "LockGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer.PlayerGui
 
--- MAIN BUTTON
+-- ===== ПЕРЕТАСКИВАЕМАЯ ИКОНКА =====
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0, 50, 0, 50)
 btn.Position = UDim2.new(0, 10, 0, 10)
@@ -30,7 +31,38 @@ btnStroke.Color = Color3.fromRGB(0, 200, 255)
 btnStroke.Thickness = 2
 btnStroke.Parent = btn
 
--- MAIN MENU
+-- DRAG LOGIC
+local dragging = false
+local dragStart = nil
+local iconStartPos = nil
+
+btn.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        dragStart = input.Position
+        iconStartPos = btn.Position
+    end
+end)
+
+btn.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+    end
+end)
+
+btn.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.Touch or input.UserInputType == Enum.UserInputType.MouseMovement) then
+        local delta = input.Position - dragStart
+        btn.Position = UDim2.new(
+            iconStartPos.X.Scale,
+            iconStartPos.X.Offset + delta.X,
+            iconStartPos.Y.Scale,
+            iconStartPos.Y.Offset + delta.Y
+        )
+    end
+end)
+
+-- ===== ОСТАЛЬНОЙ GUI (без изменений) =====
 local mainMenu = Instance.new("Frame")
 mainMenu.Size = UDim2.new(0, 250, 0, 150)
 mainMenu.Position = UDim2.new(0, 70, 0, 10)
@@ -177,7 +209,7 @@ local backAvatarCorner = Instance.new("UICorner")
 backAvatarCorner.CornerRadius = UDim.new(0, 4)
 backAvatarCorner.Parent = backAvatar
 
--- SPEED SLIDER (переделано)
+-- SPEED SLIDER
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, -10, 0, 25)
 speedLabel.Position = UDim2.new(0, 5, 0, 40)
@@ -210,7 +242,7 @@ local speedIndCorner = Instance.new("UICorner")
 speedIndCorner.CornerRadius = UDim.new(1, 0)
 speedIndCorner.Parent = speedIndicator
 
--- JUMP SLIDER (переделано)
+-- JUMP SLIDER
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, -10, 0, 25)
 jumpLabel.Position = UDim2.new(0, 5, 0, 100)
@@ -242,8 +274,8 @@ jumpIndicator.Parent = jumpTrack
 local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
 jumpIndCorner.Parent = jumpIndicator
--- Lock & Avatars Hub v9.0 (Part 2)
--- STATE
+
+-- ===== STATE =====
 local target = nil
 local locked = false
 local selectedButton = nil
@@ -251,17 +283,45 @@ local smoothCamCFrame = Camera.CFrame
 
 local speedValue = 16
 local jumpValue = 50
+local currentSpeed = 16  -- для плавного изменения
 
--- Применение статов к персонажу
+-- ===== ПЛАВНОЕ ПРИМЕНЕНИЕ СКОРОСТИ (АНТИ-ДЕТЕКТ) =====
+local function applySpeedSmoothly(targetSpeed)
+    local char = LocalPlayer.Character
+    if not char then return end
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not humanoid then return end
+
+    -- Если скорость изменилась слишком резко, античит может заметить
+    -- Делаем плавное изменение через Tween
+    local diff = math.abs(targetSpeed - currentSpeed)
+    if diff > 20 then
+        -- Резкое изменение — разбиваем на шаги
+        local steps = math.ceil(diff / 5)
+        local stepSize = (targetSpeed - currentSpeed) / steps
+        for i = 1, steps do
+            currentSpeed = currentSpeed + stepSize
+            humanoid.WalkSpeed = math.floor(currentSpeed)
+            task.wait(0.05)
+        end
+    else
+        -- Маленькое изменение — применяем сразу
+        currentSpeed = targetSpeed
+        humanoid.WalkSpeed = targetSpeed
+    end
+end
+
+-- ===== ПРИМЕНЕНИЕ СТАТОВ =====
 local function applyStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
         humanoid.WalkSpeed = speedValue
         humanoid.JumpPower = jumpValue
+        currentSpeed = speedValue
     end
 end
 
--- Обновление текста
+-- ===== ОБНОВЛЕНИЕ ТЕКСТА =====
 local function updateSpeedDisplay()
     speedLabel.Text = "Speed: " .. math.floor(speedValue)
 end
@@ -270,7 +330,7 @@ local function updateJumpDisplay()
     jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
 end
 
--- Функция для создания универсального слайдера (работает на ПК и телефоне)
+-- ===== СЛАЙДЕРЫ =====
 local function setupSlider(track, indicator, label, minVal, maxVal, callback)
     local dragging = false
     local dragConn = nil
@@ -284,17 +344,14 @@ local function setupSlider(track, indicator, label, minVal, maxVal, callback)
         local val = minVal + (maxVal - minVal) * rel
         callback(math.floor(val))
         indicator.Position = UDim2.new(rel, -10, 0, -4)
-        -- Обновляем текст лейбла
         local labelText = label.Text:gsub("%d+$", "") .. math.floor(val)
         label.Text = labelText
     end
 
-    -- Начало перетаскивания
     local function startDrag(input)
         if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
             dragging = true
             updateFromPosition(input.Position)
-            -- Подписываемся на изменение позиции глобально
             if dragConn then dragConn:Disconnect() end
             if endConn then endConn:Disconnect() end
             dragConn = UserInputService.InputChanged:Connect(function(inputChanged)
@@ -312,16 +369,14 @@ local function setupSlider(track, indicator, label, minVal, maxVal, callback)
         end
     end
 
-    -- События на треке (начало перетаскивания)
     track.InputBegan:Connect(startDrag)
-    -- Также на индикаторе, чтобы можно было схватить его
     indicator.InputBegan:Connect(startDrag)
 end
 
--- Настройка слайдеров
 setupSlider(speedTrack, speedIndicator, speedLabel, 16, 100, function(val)
     speedValue = val
-    applyStats(LocalPlayer.Character)
+    -- Применяем скорость плавно
+    applySpeedSmoothly(val)
     updateSpeedDisplay()
 end)
 
@@ -331,7 +386,7 @@ setupSlider(jumpTrack, jumpIndicator, jumpLabel, 40, 200, function(val)
     updateJumpDisplay()
 end)
 
--- LOCK LIST
+-- ===== LOCK LIST =====
 local function updateLockList()
     for _, child in ipairs(lockScroll:GetChildren()) do
         if child:IsA("TextButton") then
@@ -397,7 +452,7 @@ local function updateLockList()
     lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
 end
 
--- NAVIGATION
+-- ===== NAVIGATION =====
 local function showMain()
     mainMenu.Visible = true
     lockSub.Visible = false
@@ -415,7 +470,7 @@ local function showAvatar()
     avatarSub.Visible = true
 end
 
--- BUTTON EVENTS
+-- ===== BUTTON EVENTS =====
 btn.MouseButton1Click:Connect(function()
     if mainMenu.Visible or lockSub.Visible or avatarSub.Visible then
         mainMenu.Visible = false
@@ -431,7 +486,7 @@ avatarBtn.MouseButton1Click:Connect(showAvatar)
 backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 
--- CAMERA LOCK
+-- ===== CAMERA LOCK =====
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
         return
@@ -473,7 +528,7 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = smoothCamCFrame
 end)
 
--- HOTKEY L
+-- ===== HOTKEY L =====
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.L and locked then
@@ -488,15 +543,15 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
--- RESPAWN
+-- ===== RESPAWN =====
 LocalPlayer.CharacterAdded:Connect(function(char)
-    wait(0.5)
+    task.wait(0.5)
     if speedValue ~= 16 or jumpValue ~= 50 then
         applyStats(char)
     end
 end)
 
--- PROTECT STATS
+-- ===== PROTECT STATS =====
 local function protectStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if not humanoid then return end
@@ -515,16 +570,17 @@ local function protectStats(char)
 end
 
 LocalPlayer.CharacterAdded:Connect(function(char)
-    wait(0.5)
+    task.wait(0.5)
     protectStats(char)
 end)
 
 if LocalPlayer.Character then
-    wait(0.5)
+    task.wait(0.5)
     protectStats(LocalPlayer.Character)
 end
 
--- INIT
+-- ===== INIT =====
 smoothCamCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
+currentSpeed = 16
