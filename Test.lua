@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v2.0
+-- Lock & Avatars Hub v3.0 (Fully Working)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -8,6 +8,7 @@ local LocalPlayer = Players.LocalPlayer
 
 -- SETTINGS
 local SMOOTHNESS = 0.2  -- Lock smoothness
+local FLY_SPEED = 50    -- Fly movement speed
 
 -- GUI (persistent)
 local screenGui = Instance.new("ScreenGui")
@@ -15,7 +16,7 @@ screenGui.Name = "LockGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer.PlayerGui
 
--- Main Button (toggle main menu)
+-- Main Button
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0, 50, 0, 50)
 btn.Position = UDim2.new(0, 10, 0, 10)
@@ -35,7 +36,7 @@ btnStroke.Color = Color3.fromRGB(0, 200, 255)
 btnStroke.Thickness = 2
 btnStroke.Parent = btn
 
--- MAIN MENU FRAME
+-- MAIN MENU
 local mainMenu = Instance.new("Frame")
 mainMenu.Size = UDim2.new(0, 250, 0, 150)
 mainMenu.Position = UDim2.new(0, 70, 0, 10)
@@ -63,7 +64,6 @@ titleLabel.Font = Enum.Font.GothamBold
 titleLabel.TextSize = 20
 titleLabel.Parent = mainMenu
 
--- Buttons inside main menu
 local lockBtn = Instance.new("TextButton")
 lockBtn.Size = UDim2.new(0.8, 0, 0, 35)
 lockBtn.Position = UDim2.new(0.1, 0, 0, 45)
@@ -92,7 +92,7 @@ local avatarCorner = Instance.new("UICorner")
 avatarCorner.CornerRadius = UDim.new(0, 6)
 avatarCorner.Parent = avatarBtn
 
--- LOCK SUB-MENU (same as v1.2 but with back button)
+-- LOCK SUB-MENU
 local lockSub = Instance.new("Frame")
 lockSub.Size = UDim2.new(0, 220, 0, 320)
 lockSub.Position = UDim2.new(0, 70, 0, 10)
@@ -149,7 +149,7 @@ lockLayout.Parent = lockScroll
 
 -- AVATARS SUB-MENU
 local avatarSub = Instance.new("Frame")
-avatarSub.Size = UDim2.new(0, 220, 0, 180)
+avatarSub.Size = UDim2.new(0, 220, 0, 200)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
 avatarSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 avatarSub.BorderSizePixel = 0
@@ -188,7 +188,7 @@ local backAvatarCorner = Instance.new("UICorner")
 backAvatarCorner.CornerRadius = UDim.new(0, 4)
 backAvatarCorner.Parent = backAvatar
 
--- Speed slider
+-- Speed
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, -10, 0, 20)
 speedLabel.Position = UDim2.new(0, 5, 0, 40)
@@ -200,18 +200,17 @@ speedLabel.TextSize = 14
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.Parent = avatarSub
 
-local speedSlider = Instance.new("TextButton") -- using TextButton as slider track
+local speedSlider = Instance.new("TextButton")
 speedSlider.Size = UDim2.new(1, -10, 0, 6)
 speedSlider.Position = UDim2.new(0, 5, 0, 65)
 speedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 speedSlider.BorderSizePixel = 0
 speedSlider.Text = ""
 speedSlider.Parent = avatarSub
-local sliderCorner = Instance.new("UICorner")
-sliderCorner.CornerRadius = UDim.new(1, 0)
-sliderCorner.Parent = speedSlider
+local speedCorner = Instance.new("UICorner")
+speedCorner.CornerRadius = UDim.new(1, 0)
+speedCorner.Parent = speedSlider
 
--- Indicator (draggable)
 local speedIndicator = Instance.new("TextButton")
 speedIndicator.Size = UDim2.new(0, 12, 0, 12)
 speedIndicator.Position = UDim2.new(0, 0, 0, -3)
@@ -219,14 +218,14 @@ speedIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 speedIndicator.BorderSizePixel = 0
 speedIndicator.Text = ""
 speedIndicator.Parent = speedSlider
-local indCorner = Instance.new("UICorner")
-indCorner.CornerRadius = UDim.new(1, 0)
-indCorner.Parent = speedIndicator
+local speedIndCorner = Instance.new("UICorner")
+speedIndCorner.CornerRadius = UDim.new(1, 0)
+speedIndCorner.Parent = speedIndicator
 
--- Jump slider
+-- Jump
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, -10, 0, 20)
-jumpLabel.Position = UDim2.new(0, 5, 0, 80)
+jumpLabel.Position = UDim2.new(0, 5, 0, 85)
 jumpLabel.BackgroundTransparency = 1
 jumpLabel.Text = "Jump: 50"
 jumpLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
@@ -237,7 +236,7 @@ jumpLabel.Parent = avatarSub
 
 local jumpSlider = Instance.new("TextButton")
 jumpSlider.Size = UDim2.new(1, -10, 0, 6)
-jumpSlider.Position = UDim2.new(0, 5, 0, 105)
+jumpSlider.Position = UDim2.new(0, 5, 0, 110)
 jumpSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 jumpSlider.BorderSizePixel = 0
 jumpSlider.Text = ""
@@ -257,10 +256,10 @@ local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
 jumpIndCorner.Parent = jumpIndicator
 
--- Fly toggle
+-- Fly
 local flyBtn = Instance.new("TextButton")
 flyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-flyBtn.Position = UDim2.new(0.1, 0, 0, 125)
+flyBtn.Position = UDim2.new(0.1, 0, 0, 135)
 flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 flyBtn.BorderSizePixel = 0
 flyBtn.Text = "Fly: OFF"
@@ -276,34 +275,37 @@ flyCorner.Parent = flyBtn
 local target = nil
 local locked = false
 local currentCFrame = Camera.CFrame
-
--- Fly state
 local flying = false
-local flyBodyVelocity = nil
-local flyBodyGyro = nil
+local flyBV = nil
+local flyBG = nil
 
--- Slider values
+-- Values
 local speedValue = 16
 local jumpValue = 50
 
--- Helper functions
-local function updateSpeedDisplay()
-    speedLabel.Text = "Speed: " .. math.floor(speedValue)
-    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
+-- Apply speed & jump to current character
+local function applyStats(char)
+    local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
         humanoid.WalkSpeed = speedValue
-    end
-end
-
-local function updateJumpDisplay()
-    jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
-    local humanoid = LocalPlayer.Character and LocalPlayer.Character:FindFirstChild("Humanoid")
-    if humanoid then
         humanoid.JumpPower = jumpValue
     end
 end
 
--- Fly functions
+-- Update displays
+local function updateSpeedDisplay()
+    speedLabel.Text = "Speed: " .. math.floor(speedValue)
+    local char = LocalPlayer.Character
+    if char then applyStats(char) end
+end
+
+local function updateJumpDisplay()
+    jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
+    local char = LocalPlayer.Character
+    if char then applyStats(char) end
+end
+
+-- FLY functions
 local function startFly()
     local char = LocalPlayer.Character
     if not char then return end
@@ -311,34 +313,43 @@ local function startFly()
     local humanoid = char:FindFirstChild("Humanoid")
     if not root or not humanoid then return end
 
+    if flying then return end
     flying = true
     flyBtn.Text = "Fly: ON"
     flyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
 
-    -- BodyVelocity for upward movement
-    flyBodyVelocity = Instance.new("BodyVelocity")
-    flyBodyVelocity.MaxForce = Vector3.new(0, 4000, 0)
-    flyBodyVelocity.Velocity = Vector3.new(0, 10, 0)  -- initial upward
-    flyBodyVelocity.Parent = root
+    -- Disable gravity on humanoid (optional, but BodyVelocity will handle)
+    humanoid.PlatformStand = true
 
-    -- BodyGyro to keep upright
-    flyBodyGyro = Instance.new("BodyGyro")
-    flyBodyGyro.MaxTorque = Vector3.new(4000, 4000, 4000)
-    flyBodyGyro.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
-    flyBodyGyro.Parent = root
+    -- BodyVelocity for movement
+    flyBV = Instance.new("BodyVelocity")
+    flyBV.MaxForce = Vector3.new(4000, 4000, 4000)
+    flyBV.Velocity = Vector3.new(0, 0, 0)
+    flyBV.Parent = root
 
-    -- Movement using WASD (will be handled in RenderStepped)
+    -- BodyGyro for upright orientation
+    flyBG = Instance.new("BodyGyro")
+    flyBG.MaxTorque = Vector3.new(4000, 4000, 4000)
+    flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
+    flyBG.Parent = root
 end
 
 local function stopFly()
     flying = false
     flyBtn.Text = "Fly: OFF"
     flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-    if flyBodyVelocity then flyBodyVelocity:Destroy() flyBodyVelocity = nil end
-    if flyBodyGyro then flyBodyGyro:Destroy() flyBodyGyro = nil end
+
+    local char = LocalPlayer.Character
+    if char then
+        local humanoid = char:FindFirstChild("Humanoid")
+        if humanoid then
+            humanoid.PlatformStand = false
+        end
+    end
+    if flyBV then flyBV:Destroy() flyBV = nil end
+    if flyBG then flyBG:Destroy() flyBG = nil end
 end
 
--- Toggle fly
 local function toggleFly()
     if flying then
         stopFly()
@@ -347,41 +358,45 @@ local function toggleFly()
     end
 end
 
--- Handle fly movement (WASD)
-local function handleFlyMovement()
+-- Fly movement (called every frame)
+local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if not root or not flyBodyVelocity then return end
-
-    local moveDirection = Vector3.new()
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then moveDirection = moveDirection + Camera.CFrame.LookVector * Vector3.new(1,0,1) end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then moveDirection = moveDirection - Camera.CFrame.LookVector * Vector3.new(1,0,1) end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then moveDirection = moveDirection - Camera.CFrame.RightVector end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then moveDirection = moveDirection + Camera.CFrame.RightVector end
-    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then moveDirection = moveDirection + Vector3.new(0, 1, 0) end
-    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then moveDirection = moveDirection - Vector3.new(0, 1, 0) end
-
-    if moveDirection.Magnitude > 0 then
-        moveDirection = moveDirection.Unit * 50  -- speed
-        flyBodyVelocity.Velocity = Vector3.new(moveDirection.X, moveDirection.Y, moveDirection.Z)
-    else
-        flyBodyVelocity.Velocity = Vector3.new(0, 0, 0)  -- hover
+    if not char then
+        stopFly()
+        return
     end
+    local root = char:FindFirstChild("HumanoidRootPart")
+    if not root or not flyBV then return end
+
+    local move = Vector3.new()
+    local cam = Camera
+    local forward = cam.CFrame.LookVector * Vector3.new(1,0,1)
+    local right = cam.CFrame.RightVector
+    local up = Vector3.new(0,1,0)
+
+    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + forward end
+    if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - forward end
+    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + right end
+    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + up end
+    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - up end
+
+    if move.Magnitude > 0 then
+        move = move.Unit * FLY_SPEED
+    end
+    flyBV.Velocity = move
 
     -- Keep upright
-    if flyBodyGyro then
-        flyBodyGyro.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
+    if flyBG then
+        flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0,1,0))
     end
 end
 
--- LOCK functions (same as v1.2)
+-- LOCK functions
 local function updateLockList()
     for _, child in ipairs(lockScroll:GetChildren()) do
-        if child:IsA("TextButton") then
-            child:Destroy()
-        end
+        if child:IsA("TextButton") then child:Destroy() end
     end
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
@@ -423,8 +438,8 @@ local function updateLockList()
     lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
 end
 
--- UI navigation
-local function showMainMenu()
+-- NAVIGATION
+local function showMain()
     mainMenu.Visible = true
     lockSub.Visible = false
     avatarSub.Visible = false
@@ -441,68 +456,59 @@ local function showAvatar()
     avatarSub.Visible = true
 end
 
--- Button clicks
+-- BUTTON EVENTS
 btn.MouseButton1Click:Connect(function()
     if mainMenu.Visible or lockSub.Visible or avatarSub.Visible then
-        -- Close all
         mainMenu.Visible = false
         lockSub.Visible = false
         avatarSub.Visible = false
         return
     end
-    showMainMenu()
+    showMain()
 end)
 
 lockBtn.MouseButton1Click:Connect(showLock)
 avatarBtn.MouseButton1Click:Connect(showAvatar)
-
-backLock.MouseButton1Click:Connect(showMainMenu)
-backAvatar.MouseButton1Click:Connect(showMainMenu)
-
--- Fly button
+backLock.MouseButton1Click:Connect(showMain)
+backAvatar.MouseButton1Click:Connect(showMain)
 flyBtn.MouseButton1Click:Connect(toggleFly)
 
--- Slider dragging functions
-local function setupSlider(slider, indicator, label, minVal, maxVal, callback)
+-- SLIDER LOGIC
+local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
-    slider.MouseButton1Down:Connect(function()
-        dragging = true
-    end)
-    slider.MouseButton1Up:Connect(function()
-        dragging = false
-    end)
-    slider.MouseLeave:Connect(function()
-        dragging = false
-    end)
+    slider.MouseButton1Down:Connect(function() dragging = true end)
+    slider.MouseButton1Up:Connect(function() dragging = false end)
+    slider.MouseLeave:Connect(function() dragging = false end)
 
-    local function update(pos)
-        local relativeX = (pos.X - slider.AbsolutePosition.X) / slider.AbsoluteSize.X
-        relativeX = math.clamp(relativeX, 0, 1)
-        local value = minVal + (maxVal - minVal) * relativeX
-        callback(math.floor(value))
-        indicator.Position = UDim2.new(relativeX, -6, 0, -3)
+    local function update(posX)
+        local rel = math.clamp((posX - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+        local val = min + (max - min) * rel
+        callback(val)
+        indicator.Position = UDim2.new(rel, -6, 0, -3)
+        label.Text = label.Text:gsub("%d+$", "") .. math.floor(val)  -- update number
     end
 
     slider.MouseMoved:Connect(function(x, y)
-        if dragging then
-            update(Vector2.new(x, y))
-        end
+        if dragging then update(x) end
+    end)
+
+    -- Also allow clicking on slider to jump
+    slider.MouseButton1Click:Connect(function(x, y)
+        update(x)
     end)
 end
 
--- Speed slider callback
 setupSlider(speedSlider, speedIndicator, speedLabel, 16, 100, function(val)
-    speedValue = val
+    speedValue = math.floor(val)
     updateSpeedDisplay()
 end)
 
--- Jump slider callback
 setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
-    jumpValue = val
+    jumpValue = math.floor(val)
     updateJumpDisplay()
 end)
 
--- Camera follow loop (Lock)
+-- CAMERA LOCK
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
         currentCFrame = Camera.CFrame
@@ -519,16 +525,16 @@ RunService.RenderStepped:Connect(function()
     local root = char:FindFirstChild("HumanoidRootPart")
     if root then
         local targetPos = root.Position
-        local desiredCFrame = CFrame.lookAt(Camera.CFrame.Position, targetPos)
-        currentCFrame = currentCFrame:Lerp(desiredCFrame, SMOOTHNESS)
+        local desired = CFrame.lookAt(Camera.CFrame.Position, targetPos)
+        currentCFrame = currentCFrame:Lerp(desired, SMOOTHNESS)
         Camera.CFrame = currentCFrame
     end
 end)
 
--- Fly movement update (every frame)
-RunService.RenderStepped:Connect(handleFlyMovement)
+-- FLY UPDATE (separate loop)
+RunService.RenderStepped:Connect(updateFlyMovement)
 
--- Hotkey L to unlock
+-- HOTKEY L to unlock
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.L and locked then
@@ -537,24 +543,22 @@ UserInputService.InputBegan:Connect(function(input, processed)
         btn.Text = "⚙"
         btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
     end
+    if input.KeyCode == Enum.KeyCode.F and not processed then
+        toggleFly()
+    end
 end)
 
--- Apply speed/jump when character respawns
+-- RESPAWN HANDLER
 LocalPlayer.CharacterAdded:Connect(function(char)
     wait(0.5)
-    local humanoid = char:FindFirstChild("Humanoid")
-    if humanoid then
-        humanoid.WalkSpeed = speedValue
-        humanoid.JumpPower = jumpValue
-    end
-    -- If fly was on, restart
+    applyStats(char)
     if flying then
         wait(0.5)
         startFly()
     end
 end)
 
--- Initial setup
+-- INIT
 currentCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
