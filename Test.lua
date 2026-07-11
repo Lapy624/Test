@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v8.0 (No Fly, only Lock + Speed + Jump)
+-- Lock & Avatars Hub v8.0 FINAL (No Fly, Working Sliders + Lock Camera)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -100,6 +100,7 @@ local lockSubStroke = Instance.new("UIStroke")
 lockSubStroke.Color = Color3.fromRGB(0, 200, 255)
 lockSubStroke.Thickness = 2
 lockSubStroke.Parent = lockSub
+
 local lockTitle = Instance.new("TextLabel")
 lockTitle.Size = UDim2.new(1, -10, 0, 30)
 lockTitle.Position = UDim2.new(0, 5, 0, 5)
@@ -138,9 +139,9 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU (без Fly)
+-- AVATARS SUB-MENU (No Fly)
 local avatarSub = Instance.new("Frame")
-avatarSub.Size = UDim2.new(0, 260, 0, 200)  -- уменьшил высоту
+avatarSub.Size = UDim2.new(0, 260, 0, 200)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
 avatarSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 avatarSub.BorderSizePixel = 0
@@ -243,7 +244,7 @@ jumpIndicator.Text = ""
 jumpIndicator.Parent = jumpSlider
 local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
-jumpIndCorner.Parent = jumpIndicator-- Lock & Avatars Hub v8.0 (Part 2) - Logic without Fly
+jumpIndCorner.Parent = jumpIndicator
 
 -- STATE
 local target = nil
@@ -374,7 +375,7 @@ avatarBtn.MouseButton1Click:Connect(showAvatar)
 backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 
--- SLIDER LOGIC
+-- SLIDER LOGIC (FIXED - using InputBegan/InputChanged)
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
 
@@ -407,6 +408,11 @@ local function setupSlider(slider, indicator, label, min, max, callback)
     slider.MouseLeave:Connect(function()
         dragging = false
     end)
+
+    -- Also allow clicking directly on the slider
+    slider.MouseButton1Click:Connect(function(x, y)
+        update(x)
+    end)
 end
 
 setupSlider(speedSlider, speedIndicator, speedLabel, 16, 100, function(val)
@@ -421,7 +427,7 @@ setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
     updateJumpDisplay()
 end)
 
--- CAMERA LOCK (следование за локальным игроком + взгляд на цель)
+-- CAMERA LOCK (follows local player, looks at target)
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
         return
