@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v10.0 (ANTI-DETECT + DRAGGABLE ICON)
+-- Lock & Avatars Hub v10.1 (DisplayName + Username in Lock List)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -62,7 +62,7 @@ btn.InputChanged:Connect(function(input)
     end
 end)
 
--- ===== ОСТАЛЬНОЙ GUI (без изменений) =====
+-- ===== MAIN MENU =====
 local mainMenu = Instance.new("Frame")
 mainMenu.Size = UDim2.new(0, 250, 0, 150)
 mainMenu.Position = UDim2.new(0, 70, 0, 10)
@@ -115,9 +115,9 @@ local avatarCorner = Instance.new("UICorner")
 avatarCorner.CornerRadius = UDim.new(0, 6)
 avatarCorner.Parent = avatarBtn
 
--- LOCK SUB-MENU
+-- ===== LOCK SUB-MENU =====
 local lockSub = Instance.new("Frame")
-lockSub.Size = UDim2.new(0, 220, 0, 320)
+lockSub.Size = UDim2.new(0, 240, 0, 340)
 lockSub.Position = UDim2.new(0, 70, 0, 10)
 lockSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 lockSub.BorderSizePixel = 0
@@ -156,8 +156,8 @@ backLockCorner.CornerRadius = UDim.new(0, 4)
 backLockCorner.Parent = backLock
 
 local lockScroll = Instance.new("ScrollingFrame")
-lockScroll.Size = UDim2.new(1, -10, 1, -40)
-lockScroll.Position = UDim2.new(0, 5, 0, 35)
+lockScroll.Size = UDim2.new(1, -10, 1, -45)
+lockScroll.Position = UDim2.new(0, 5, 0, 40)
 lockScroll.BackgroundTransparency = 1
 lockScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 lockScroll.ScrollBarThickness = 4
@@ -165,10 +165,10 @@ lockScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 255)
 lockScroll.Parent = lockSub
 local lockLayout = Instance.new("UIListLayout")
 lockLayout.SortOrder = Enum.SortOrder.Name
-lockLayout.Padding = UDim.new(0, 6)
+lockLayout.Padding = UDim.new(0, 4)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU
+-- ===== AVATARS SUB-MENU =====
 local avatarSub = Instance.new("Frame")
 avatarSub.Size = UDim2.new(0, 260, 0, 200)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
@@ -283,20 +283,17 @@ local smoothCamCFrame = Camera.CFrame
 
 local speedValue = 16
 local jumpValue = 50
-local currentSpeed = 16  -- для плавного изменения
+local currentSpeed = 16
 
--- ===== ПЛАВНОЕ ПРИМЕНЕНИЕ СКОРОСТИ (АНТИ-ДЕТЕКТ) =====
+-- ===== ПЛАВНОЕ ПРИМЕНЕНИЕ СКОРОСТИ =====
 local function applySpeedSmoothly(targetSpeed)
     local char = LocalPlayer.Character
     if not char then return end
     local humanoid = char:FindFirstChild("Humanoid")
     if not humanoid then return end
 
-    -- Если скорость изменилась слишком резко, античит может заметить
-    -- Делаем плавное изменение через Tween
     local diff = math.abs(targetSpeed - currentSpeed)
     if diff > 20 then
-        -- Резкое изменение — разбиваем на шаги
         local steps = math.ceil(diff / 5)
         local stepSize = (targetSpeed - currentSpeed) / steps
         for i = 1, steps do
@@ -305,13 +302,11 @@ local function applySpeedSmoothly(targetSpeed)
             task.wait(0.05)
         end
     else
-        -- Маленькое изменение — применяем сразу
         currentSpeed = targetSpeed
         humanoid.WalkSpeed = targetSpeed
     end
 end
 
--- ===== ПРИМЕНЕНИЕ СТАТОВ =====
 local function applyStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
@@ -321,7 +316,6 @@ local function applyStats(char)
     end
 end
 
--- ===== ОБНОВЛЕНИЕ ТЕКСТА =====
 local function updateSpeedDisplay()
     speedLabel.Text = "Speed: " .. math.floor(speedValue)
 end
@@ -375,7 +369,6 @@ end
 
 setupSlider(speedTrack, speedIndicator, speedLabel, 16, 100, function(val)
     speedValue = val
-    -- Применяем скорость плавно
     applySpeedSmoothly(val)
     updateSpeedDisplay()
 end)
@@ -386,10 +379,10 @@ setupSlider(jumpTrack, jumpIndicator, jumpLabel, 40, 200, function(val)
     updateJumpDisplay()
 end)
 
--- ===== LOCK LIST =====
+-- ===== LOCK LIST (С DISPLAYNAME + USERNAME) =====
 local function updateLockList()
     for _, child in ipairs(lockScroll:GetChildren()) do
-        if child:IsA("TextButton") then
+        if child:IsA("ImageButton") or child:IsA("TextLabel") then
             child:Destroy()
         end
     end
@@ -397,30 +390,44 @@ local function updateLockList()
 
     for _, plr in ipairs(Players:GetPlayers()) do
         if plr ~= LocalPlayer then
-            local b = Instance.new("TextButton")
-            b.Size = UDim2.new(1, -4, 0, 30)
-            b.Text = plr.Name
-            b.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-            b.BorderSizePixel = 0
-            b.TextColor3 = Color3.fromRGB(200, 200, 220)
-            b.Font = Enum.Font.Gotham
-            b.TextSize = 16
-            b.TextXAlignment = Enum.TextXAlignment.Left
-            b.Parent = lockScroll
-            local corner = Instance.new("UICorner")
-            corner.CornerRadius = UDim.new(0, 6)
-            corner.Parent = b
-            local stroke = Instance.new("UIStroke")
-            stroke.Color = Color3.fromRGB(70, 70, 90)
-            stroke.Thickness = 1
-            stroke.Parent = b
+            local container = Instance.new("ImageButton")
+            container.Size = UDim2.new(1, -4, 0, 42)
+            container.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+            container.BorderSizePixel = 0
+            container.Image = ""
+            container.Parent = lockScroll
+            container:SetAttribute("Player", plr)
 
             if locked and target == plr then
-                b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-                selectedButton = b
+                container.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                selectedButton = container
             end
 
-            b.MouseButton1Click:Connect(function()
+            -- DisplayName (БОЛЬШОЙ)
+            local nameLabel = Instance.new("TextLabel")
+            nameLabel.Size = UDim2.new(1, -10, 0, 22)
+            nameLabel.Position = UDim2.new(0, 5, 0, 2)
+            nameLabel.BackgroundTransparency = 1
+            nameLabel.Text = plr.DisplayName
+            nameLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+            nameLabel.Font = Enum.Font.GothamBold
+            nameLabel.TextSize = 16
+            nameLabel.TextXAlignment = Enum.TextXAlignment.Left
+            nameLabel.Parent = container
+
+            -- Username (МАЛЕНЬКИЙ, СЕРЫЙ)
+            local userLabel = Instance.new("TextLabel")
+            userLabel.Size = UDim2.new(1, -10, 0, 14)
+            userLabel.Position = UDim2.new(0, 5, 0, 24)
+            userLabel.BackgroundTransparency = 1
+            userLabel.Text = "@" .. plr.Name
+            userLabel.TextColor3 = Color3.fromRGB(150, 150, 170)
+            userLabel.Font = Enum.Font.Gotham
+            userLabel.TextSize = 11
+            userLabel.TextXAlignment = Enum.TextXAlignment.Left
+            userLabel.Parent = container
+
+            container.MouseButton1Click:Connect(function()
                 if locked and target == plr then
                     locked = false
                     target = nil
@@ -440,8 +447,8 @@ local function updateLockList()
                 locked = true
                 btn.Text = "🔓"
                 btn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
-                b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
-                selectedButton = b
+                container.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                selectedButton = container
                 lockSub.Visible = false
                 smoothCamCFrame = Camera.CFrame
             end)
@@ -449,7 +456,7 @@ local function updateLockList()
     end
 
     local count = #lockScroll:GetChildren() - 1
-    lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
+    lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 46 + 10)
 end
 
 -- ===== NAVIGATION =====
