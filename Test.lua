@@ -1,55 +1,108 @@
--- Lock Camera v2.0 - Toggle & Switch
+-- Lock Camera v3.0 - Toggle & Switch with GhostHub style
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- GUI
+-- UI Creation
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LockGui"
+screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer.PlayerGui
 
--- Main button (toggle list)
+-- Main Button (toggle list)
 local btn = Instance.new("TextButton")
-btn.Size = UDim2.new(0, 60, 0, 60)
-btn.Position = UDim2.new(0, 10, 0, 10)
-btn.BackgroundColor3 = Color3.fromRGB(30, 30, 40)
-btn.BorderColor3 = Color3.fromRGB(0, 255, 255)
-btn.BorderSizePixel = 2
+btn.Size = UDim2.new(0, 50, 0, 50)
+btn.Position = UDim2.new(0, 15, 0, 15)
+btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
+btn.BorderSizePixel = 0
 btn.Text = "🔒"
 btn.TextScaled = true
-btn.TextColor3 = Color3.fromRGB(0, 255, 255)
+btn.TextColor3 = Color3.fromRGB(0, 200, 255)
 btn.Parent = screenGui
 
--- Player list frame
+-- Corner & Stroke for button
+local btnCorner = Instance.new("UICorner")
+btnCorner.CornerRadius = UDim.new(1, 0)
+btnCorner.Parent = btn
+
+local btnStroke = Instance.new("UIStroke")
+btnStroke.Color = Color3.fromRGB(0, 200, 255)
+btnStroke.Thickness = 2
+btnStroke.Parent = btn
+
+-- Drop shadow (optional)
+local btnShadow = Instance.new("UIShadow")
+btnShadow.Color = Color3.fromRGB(0, 150, 200)
+btnShadow.Offset = Vector2.new(0, 4)
+btnShadow.Blur = 8
+btnShadow.Parent = btn
+
+-- Player List Frame (hidden by default)
 local listFrame = Instance.new("Frame")
-listFrame.Size = UDim2.new(0, 200, 0, 300)
-listFrame.Position = UDim2.new(0, 80, 0, 10)
-listFrame.BackgroundColor3 = Color3.fromRGB(20, 20, 30)
-listFrame.BorderColor3 = Color3.fromRGB(0, 255, 255)
-listFrame.BorderSizePixel = 2
+listFrame.Size = UDim2.new(0, 220, 0, 320)
+listFrame.Position = UDim2.new(0, 75, 0, 15)
+listFrame.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
+listFrame.BorderSizePixel = 0
 listFrame.Visible = false
 listFrame.Parent = screenGui
 
+local listCorner = Instance.new("UICorner")
+listCorner.CornerRadius = UDim.new(0, 10)
+listCorner.Parent = listFrame
+
+local listStroke = Instance.new("UIStroke")
+listStroke.Color = Color3.fromRGB(0, 200, 255)
+listStroke.Thickness = 2
+listStroke.Parent = listFrame
+
+local listShadow = Instance.new("UIShadow")
+listShadow.Color = Color3.fromRGB(0, 150, 200)
+listShadow.Offset = Vector2.new(0, 6)
+listShadow.Blur = 12
+listShadow.Parent = listFrame
+
+-- Title label
+local title = Instance.new("TextLabel")
+title.Size = UDim2.new(1, -10, 0, 30)
+title.Position = UDim2.new(0, 5, 0, 5)
+title.BackgroundTransparency = 1
+title.Text = "🔒 LOCK CAMERA"
+title.TextColor3 = Color3.fromRGB(0, 200, 255)
+title.Font = Enum.Font.GothamBold
+title.TextSize = 18
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = listFrame
+
+-- ScrollingFrame for player list
 local scroll = Instance.new("ScrollingFrame")
-scroll.Size = UDim2.new(1, -10, 1, -10)
-scroll.Position = UDim2.new(0, 5, 0, 5)
+scroll.Size = UDim2.new(1, -10, 1, -40)
+scroll.Position = UDim2.new(0, 5, 0, 35)
 scroll.BackgroundTransparency = 1
 scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
-scroll.ScrollBarThickness = 6
+scroll.ScrollBarThickness = 4
+scroll.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 255)
 scroll.Parent = listFrame
 
 local layout = Instance.new("UIListLayout")
 layout.SortOrder = Enum.SortOrder.Name
-layout.Padding = UDim.new(0, 4)
+layout.Padding = UDim.new(0, 6)
 layout.Parent = scroll
 
 -- State
-local target = nil          -- current target player
-local locked = false        -- is lock active?
-local listVisible = false   -- is list open?
-local selectedButton = nil  -- reference to the button of current target
+local target = nil
+local locked = false
+local listVisible = false
+local selectedButton = nil
+
+-- Helper: tween transparency/color
+local function tweenObject(obj, properties, duration)
+    local tween = TweenService:Create(obj, TweenInfo.new(duration or 0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), properties)
+    tween:Play()
+    return tween
+end
 
 -- Update player list
 local function updateList()
@@ -61,47 +114,71 @@ local function updateList()
     end
     selectedButton = nil
 
-    -- Create buttons for each player (excluding self)
-    for _, plr in ipairs(Players:GetPlayers()) do
+    local players = Players:GetPlayers()
+    local count = 0
+
+    for _, plr in ipairs(players) do
         if plr ~= LocalPlayer then
+            count = count + 1
             local b = Instance.new("TextButton")
-            b.Size = UDim2.new(1, -4, 0, 30)
+            b.Size = UDim2.new(1, -4, 0, 32)
+            b.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+            b.BorderSizePixel = 0
             b.Text = plr.Name
-            b.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
-            b.BorderColor3 = Color3.fromRGB(100, 200, 255)
-            b.BorderSizePixel = 1
-            b.TextColor3 = Color3.fromRGB(255, 255, 255)
-            b.Font = Enum.Font.SourceSans
-            b.TextSize = 18
+            b.TextColor3 = Color3.fromRGB(200, 200, 220)
+            b.Font = Enum.Font.Gotham
+            b.TextSize = 16
+            b.TextXAlignment = Enum.TextXAlignment.Left
             b.Parent = scroll
 
-            -- Store player reference in button
-            b:SetAttribute("Player", plr)
+            -- Corner for button
+            local corner = Instance.new("UICorner")
+            corner.CornerRadius = UDim.new(0, 6)
+            corner.Parent = b
+
+            -- Stroke
+            local stroke = Instance.new("UIStroke")
+            stroke.Color = Color3.fromRGB(70, 70, 90)
+            stroke.Thickness = 1
+            stroke.Parent = b
+
+            -- Hover effect
+            local function onHover(enter)
+                if enter then
+                    if b ~= selectedButton then
+                        b.BackgroundColor3 = Color3.fromRGB(40, 40, 60)
+                    end
+                else
+                    if b ~= selectedButton then
+                        b.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+                    end
+                end
+            end
+            b.MouseEnter:Connect(function() onHover(true) end)
+            b.MouseLeave:Connect(function() onHover(false) end)
 
             -- Click handler
             b.MouseButton1Click:Connect(function()
-                local clickedPlayer = b:GetAttribute("Player")
-                if not clickedPlayer then return end
+                local clickedPlayer = plr
 
-                -- If we are already locking this player, unlock
+                -- If already locking this player, unlock
                 if locked and target == clickedPlayer then
                     locked = false
                     target = nil
                     btn.Text = "🔒"
                     if selectedButton then
-                        selectedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                        selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                         selectedButton = nil
                     end
                     return
                 end
 
-                -- If locking a different player, switch target
+                -- If locking a different player, switch
                 if locked and target ~= clickedPlayer then
-                    -- Unlock old target (no need to change button highlight yet)
                     locked = false
                     target = nil
                     if selectedButton then
-                        selectedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                        selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                         selectedButton = nil
                     end
                 end
@@ -110,14 +187,15 @@ local function updateList()
                 target = clickedPlayer
                 locked = true
                 btn.Text = "🔓"
+
                 -- Highlight selected button
                 if selectedButton then
-                    selectedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+                    selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                 end
-                b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+                b.BackgroundColor3 = Color3.fromRGB(0, 120, 220)
                 selectedButton = b
 
-                -- Close list after selection (optional)
+                -- Optionally close list after selection (uncomment to enable)
                 -- listVisible = false
                 -- listFrame.Visible = false
             end)
@@ -125,14 +203,13 @@ local function updateList()
     end
 
     -- Update canvas size
-    local count = #scroll:GetChildren() - 1
-    scroll.CanvasSize = UDim2.new(0, 0, 0, count * 34 + 10)
+    scroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
 
     -- If we have a locked target, find its button and highlight it
     if locked and target then
         for _, child in ipairs(scroll:GetChildren()) do
-            if child:IsA("TextButton") and child:GetAttribute("Player") == target then
-                child.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
+            if child:IsA("TextButton") and child.Text == target.Name then
+                child.BackgroundColor3 = Color3.fromRGB(0, 120, 220)
                 selectedButton = child
                 break
             end
@@ -144,20 +221,26 @@ end
 Players.PlayerAdded:Connect(updateList)
 Players.PlayerRemoving:Connect(updateList)
 
--- Toggle list when button is clicked
+-- Toggle list visibility on button click
 btn.MouseButton1Click:Connect(function()
     listVisible = not listVisible
     listFrame.Visible = listVisible
     if listVisible then
         updateList()
+        -- Animate opening (scale)
+        listFrame.Size = UDim2.new(0, 0, 0, 0)
+        tweenObject(listFrame, {Size = UDim2.new(0, 220, 0, 320)}, 0.25)
+    else
+        -- Animate closing
+        tweenObject(listFrame, {Size = UDim2.new(0, 0, 0, 0)}, 0.2)
+        wait(0.2)
+        listFrame.Visible = false
     end
 end)
 
 -- Camera follow loop
 RunService.RenderStepped:Connect(function()
-    if not locked or not target then
-        return
-    end
+    if not locked or not target then return end
     local char = target.Character
     if not char then
         -- Target left, unlock
@@ -165,7 +248,7 @@ RunService.RenderStepped:Connect(function()
         target = nil
         btn.Text = "🔒"
         if selectedButton then
-            selectedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
             selectedButton = nil
         end
         return
@@ -184,11 +267,11 @@ UserInputService.InputBegan:Connect(function(input, processed)
         target = nil
         btn.Text = "🔒"
         if selectedButton then
-            selectedButton.BackgroundColor3 = Color3.fromRGB(40, 40, 50)
+            selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
             selectedButton = nil
         end
     end
 end)
 
--- Initial list
+-- Initial list (will be empty until first open)
 updateList()
