@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v4.3 (Fixed sliders & fly)
+-- Lock & Avatars Hub v5.0 (Mobile Fly with joystick)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -146,9 +146,9 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU
+-- AVATARS SUB-MENU (with Fly and Up/Down buttons)
 local avatarSub = Instance.new("Frame")
-avatarSub.Size = UDim2.new(0, 260, 0, 280)
+avatarSub.Size = UDim2.new(0, 260, 0, 340) -- increased height
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
 avatarSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 avatarSub.BorderSizePixel = 0
@@ -304,12 +304,43 @@ local flySpeedIndCorner = Instance.new("UICorner")
 flySpeedIndCorner.CornerRadius = UDim.new(1, 0)
 flySpeedIndCorner.Parent = flySpeedIndicator
 
+-- Up/Down buttons for vertical movement
+local upBtn = Instance.new("TextButton")
+upBtn.Size = UDim2.new(0.35, 0, 0, 35)
+upBtn.Position = UDim2.new(0.1, 0, 0, 280)
+upBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+upBtn.BorderSizePixel = 0
+upBtn.Text = "▲"
+upBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+upBtn.Font = Enum.Font.Gotham
+upBtn.TextSize = 20
+upBtn.Parent = avatarSub
+local upCorner = Instance.new("UICorner")
+upCorner.CornerRadius = UDim.new(0, 6)
+upCorner.Parent = upBtn
+
+local downBtn = Instance.new("TextButton")
+downBtn.Size = UDim2.new(0.35, 0, 0, 35)
+downBtn.Position = UDim2.new(0.55, 0, 0, 280)
+downBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
+downBtn.BorderSizePixel = 0
+downBtn.Text = "▼"
+downBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
+downBtn.Font = Enum.Font.Gotham
+downBtn.TextSize = 20
+downBtn.Parent = avatarSub
+local downCorner = Instance.new("UICorner")
+downCorner.CornerRadius = UDim.new(0, 6)
+downCorner.Parent = downBtn
+
 -- STATE
 local target = nil
 local locked = false
 local currentCFrame = Camera.CFrame
 local flying = false
 local flyBV = nil
+local flyBG = nil
+local verticalSpeed = 0   -- current vertical velocity
 
 -- Values
 local speedValue = 16
@@ -338,7 +369,7 @@ local function updateFlySpeedDisplay()
     flySpeedLabel.Text = "Fly Speed: " .. math.floor(flySpeedValue)
 end
 
--- FLY using BodyVelocity (more compatible)
+-- FLY (BodyVelocity + BodyGyro)
 local function startFly()
     local char = LocalPlayer.Character
     if not char then return end
@@ -348,19 +379,26 @@ local function startFly()
 
     if flying then return end
     flying = true
+    verticalSpeed = 0
     flyBtn.Text = "Fly: ON"
     flyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
 
     humanoid.PlatformStand = true
 
     flyBV = Instance.new("BodyVelocity")
-    flyBV.MaxForce = Vector3.new(4000, 4000, 4000)
+    flyBV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
     flyBV.Velocity = Vector3.new(0, 0, 0)
     flyBV.Parent = root
+
+    flyBG = Instance.new("BodyGyro")
+    flyBG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
+    flyBG.CFrame = root.CFrame
+    flyBG.Parent = root
 end
 
 local function stopFly()
     flying = false
+    verticalSpeed = 0
     flyBtn.Text = "Fly: OFF"
     flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 
@@ -372,6 +410,7 @@ local function stopFly()
         end
     end
     if flyBV then flyBV:Destroy() flyBV = nil end
+    if flyBG then flyBG:Destroy() flyBG = nil end
 end
 
 local function toggleFly()
@@ -382,7 +421,7 @@ local function toggleFly()
     end
 end
 
--- Fly movement
+-- Fly movement update (uses Humanoid.MoveDirection for joystick)
 local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
@@ -391,25 +430,28 @@ local function updateFlyMovement()
         return
     end
     local root = char:FindFirstChild("HumanoidRootPart")
-    if not root or not flyBV then return end
+    local humanoid = char:FindFirstChild("Humanoid")
+    if not root or not flyBV or not humanoid then return end
 
-    local move = Vector3.new()
-    local cam = Camera
-    local forward = cam.CFrame.LookVector * Vector3.new(1,0,1)
-    local right = cam.CFrame.RightVector
-    local up = Vector3.new(0,1,0)
+    -- Get movement direction from joystick (MoveDirection is already normalized)
+    local moveDirection = humanoid.MoveDirection
+    local horizontal = Vector3.new(moveDirection.X, 0, moveDirection.Z)
+    local finalVelocity = Vector3.new(0, 0, 0)
 
-    if UserInputService:IsKeyDown(Enum.KeyCode.W) then move = move + forward end
-    if UserInputService:IsKeyDown(Enum.KeyCode.S) then move = move - forward end
-    if UserInputService:IsKeyDown(Enum.KeyCode.A) then move = move - right end
-    if UserInputService:IsKeyDown(Enum.KeyCode.D) then move = move + right end
-    if UserInputService:IsKeyDown(Enum.KeyCode.Space) then move = move + up end
-    if UserInputService:IsKeyDown(Enum.KeyCode.LeftShift) then move = move - up end
-
-    if move.Magnitude > 0 then
-        move = move.Unit * flySpeedValue
+    if horizontal.Magnitude > 0 then
+        -- Apply horizontal speed
+        finalVelocity = horizontal.Unit * flySpeedValue
     end
-    flyBV.Velocity = move
+
+    -- Add vertical speed (from Up/Down buttons)
+    finalVelocity = finalVelocity + Vector3.new(0, verticalSpeed, 0)
+
+    flyBV.Velocity = finalVelocity
+
+    -- Keep upright
+    if flyBG then
+        flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
+    end
 end
 
 -- LOCK functions
@@ -492,7 +534,36 @@ backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 flyBtn.MouseButton1Click:Connect(toggleFly)
 
--- SLIDER LOGIC (fixed - uses InputObject)
+-- Up/Down button events (for vertical speed)
+local function changeVertical(speed)
+    if not flying then return end
+    verticalSpeed = math.clamp(verticalSpeed + speed, -50, 50)
+end
+
+upBtn.MouseButton1Click:Connect(function()
+    changeVertical(5)
+end)
+
+downBtn.MouseButton1Click:Connect(function()
+    changeVertical(-5)
+end)
+
+-- Hold to continuously change (for mobile)
+upBtn.MouseButton1Down:Connect(function()
+    while upBtn and upBtn:IsMouseButton1Down() and flying do
+        changeVertical(2)
+        wait(0.1)
+    end
+end)
+
+downBtn.MouseButton1Down:Connect(function()
+    while downBtn and downBtn:IsMouseButton1Down() and flying do
+        changeVertical(-2)
+        wait(0.1)
+    end
+end)
+
+-- SLIDER LOGIC
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
 
@@ -575,7 +646,7 @@ end)
 -- FLY UPDATE
 RunService.RenderStepped:Connect(updateFlyMovement)
 
--- HOTKEYS
+-- HOTKEY (only L for unlock, F removed to avoid conflict)
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.L and locked then
@@ -583,9 +654,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
         target = nil
         btn.Text = "⚙"
         btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-    end
-    if input.KeyCode == Enum.KeyCode.F and not processed then
-        toggleFly()
     end
 end)
 
