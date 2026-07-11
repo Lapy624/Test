@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v6.0 (Lock highlight + Free Fly)
+-- Lock & Avatars Hub v6.2 (Full code + fixed Fly)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -390,7 +390,7 @@ local function toggleFly()
     end
 end
 
--- Fly movement update (free flight with camera direction)
+-- ================== ИСПРАВЛЕННАЯ ФУНКЦИЯ FLY (v6.1) ==================
 local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
@@ -402,34 +402,40 @@ local function updateFlyMovement()
     local humanoid = char:FindFirstChild("Humanoid")
     if not root or not flyBV or not humanoid then return end
 
-    -- Get joystick direction (horizontal vector)
+    -- Получаем направление джойстика (MoveDirection уже нормализован)
     local moveDir = humanoid.MoveDirection
-    local magnitude = moveDir.Magnitude
-    if magnitude == 0 then
-        flyBV.Velocity = Vector3.new(0,0,0)
+    local mag = moveDir.Magnitude
+    if mag == 0 then
+        flyBV.Velocity = Vector3.new(0, 0, 0)
         return
     end
 
-    -- Build local direction vector in camera space: X = right, Z = forward
-    -- We want forward (Z) to correspond to LookVector, right (X) to RightVector
-    -- But moveDir is in world space, horizontal. We can interpret its X and Z as
-    -- components in camera's local horizontal plane.
-    -- However, we want to include vertical component from camera's LookVector.
-    -- So we transform the local vector (moveDir.X, 0, moveDir.Z) to world space using camera CFrame.
-    local localVec = Vector3.new(moveDir.X, 0, moveDir.Z)  -- local: right/forward
-    local worldDir = Camera.CFrame:VectorToWorldSpace(localVec)  -- includes rotation (and vertical if camera tilted)
-    -- Normalize to get direction, but magnitude may be >1 if moveDir is not unit? moveDir is unit.
-    worldDir = worldDir.Unit
+    -- Направление камеры (LookVector) и правый вектор
+    local look = Camera.CFrame.LookVector
+    local right = Camera.CFrame.RightVector
 
-    -- Apply speed
-    local finalVelocity = worldDir * flySpeedValue * magnitude  -- magnitude from joystick (0-1)
-    flyBV.Velocity = finalVelocity
+    -- Нормализованный ввод (mag может быть меньше 1, если джойстик не до конца)
+    local input = moveDir / mag
 
-    -- Keep upright
+    -- Составляем направление полёта:
+    -- вперёд/назад = input.Z * look (с учётом вертикали)
+    -- влево/вправо = input.X * right
+    local direction = look * input.Z + right * input.X
+    if direction.Magnitude > 0 then
+        direction = direction.Unit
+    else
+        direction = Vector3.new(0, 0, 0)
+    end
+
+    -- Применяем скорость (mag учитывает силу нажатия джойстика)
+    flyBV.Velocity = direction * flySpeedValue * mag
+
+    -- Держим персонажа вертикально (опционально)
     if flyBG then
         flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
     end
 end
+-- ==================================================================
 
 -- LOCK functions with highlight
 local function updateLockList()
@@ -622,7 +628,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- FLY UPDATE
+-- FLY UPDATE (вызов обновлённой функции)
 RunService.RenderStepped:Connect(updateFlyMovement)
 
 -- HOTKEY (only L for unlock)
