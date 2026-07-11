@@ -1,20 +1,17 @@
--- Lock & Avatars Hub v8.0 FINAL (No Fly, Working Sliders + Lock Camera)
+-- Lock & Avatars Hub v8.0 FINAL (Working Sliders + Lock)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
--- SETTINGS
 local SMOOTHNESS = 0.2
 
--- GUI (persistent)
 local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "LockGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer.PlayerGui
 
--- Main Button
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0, 50, 0, 50)
 btn.Position = UDim2.new(0, 10, 0, 10)
@@ -32,7 +29,6 @@ btnStroke.Color = Color3.fromRGB(0, 200, 255)
 btnStroke.Thickness = 2
 btnStroke.Parent = btn
 
--- MAIN MENU
 local mainMenu = Instance.new("Frame")
 mainMenu.Size = UDim2.new(0, 250, 0, 150)
 mainMenu.Position = UDim2.new(0, 70, 0, 10)
@@ -85,7 +81,6 @@ local avatarCorner = Instance.new("UICorner")
 avatarCorner.CornerRadius = UDim.new(0, 6)
 avatarCorner.Parent = avatarBtn
 
--- LOCK SUB-MENU
 local lockSub = Instance.new("Frame")
 lockSub.Size = UDim2.new(0, 220, 0, 320)
 lockSub.Position = UDim2.new(0, 70, 0, 10)
@@ -139,7 +134,6 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU (No Fly)
 local avatarSub = Instance.new("Frame")
 avatarSub.Size = UDim2.new(0, 260, 0, 200)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
@@ -180,7 +174,6 @@ local backAvatarCorner = Instance.new("UICorner")
 backAvatarCorner.CornerRadius = UDim.new(0, 4)
 backAvatarCorner.Parent = backAvatar
 
--- Speed
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, -10, 0, 25)
 speedLabel.Position = UDim2.new(0, 5, 0, 40)
@@ -213,7 +206,6 @@ local speedIndCorner = Instance.new("UICorner")
 speedIndCorner.CornerRadius = UDim.new(1, 0)
 speedIndCorner.Parent = speedIndicator
 
--- Jump
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, -10, 0, 25)
 jumpLabel.Position = UDim2.new(0, 5, 0, 100)
@@ -246,18 +238,14 @@ local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
 jumpIndCorner.Parent = jumpIndicator
 
--- STATE
 local target = nil
 local locked = false
-local currentCFrame = Camera.CFrame
 local selectedButton = nil
 local smoothCamCFrame = Camera.CFrame
 
--- Values
 local speedValue = 16
 local jumpValue = 50
 
--- Apply stats to character
 local function applyStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
@@ -266,7 +254,6 @@ local function applyStats(char)
     end
 end
 
--- Update displays
 local function updateSpeedDisplay()
     speedLabel.Text = "Speed: " .. math.floor(speedValue)
 end
@@ -275,7 +262,6 @@ local function updateJumpDisplay()
     jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
 end
 
--- LOCK functions with highlight
 local function updateLockList()
     for _, child in ipairs(lockScroll:GetChildren()) do
         if child:IsA("TextButton") then
@@ -341,7 +327,6 @@ local function updateLockList()
     lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
 end
 
--- NAVIGATION
 local function showMain()
     mainMenu.Visible = true
     lockSub.Visible = false
@@ -359,7 +344,6 @@ local function showAvatar()
     avatarSub.Visible = true
 end
 
--- BUTTON EVENTS
 btn.MouseButton1Click:Connect(function()
     if mainMenu.Visible or lockSub.Visible or avatarSub.Visible then
         mainMenu.Visible = false
@@ -375,7 +359,6 @@ avatarBtn.MouseButton1Click:Connect(showAvatar)
 backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 
--- SLIDER LOGIC (FIXED - using InputBegan/InputChanged)
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
 
@@ -409,8 +392,7 @@ local function setupSlider(slider, indicator, label, min, max, callback)
         dragging = false
     end)
 
-    -- Also allow clicking directly on the slider
-    slider.MouseButton1Click:Connect(function(x, y)
+    slider.MouseButton1Click:Connect(function(x)
         update(x)
     end)
 end
@@ -427,7 +409,6 @@ setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
     updateJumpDisplay()
 end)
 
--- CAMERA LOCK (follows local player, looks at target)
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
         return
@@ -469,7 +450,6 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = smoothCamCFrame
 end)
 
--- HOTKEY (only L for unlock)
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.L and locked then
@@ -484,7 +464,6 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
--- RESPAWN
 LocalPlayer.CharacterAdded:Connect(function(char)
     wait(0.5)
     if speedValue ~= 16 or jumpValue ~= 50 then
@@ -492,7 +471,6 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
--- PROTECT Speed & Jump from reset
 local function protectStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if not humanoid then return end
@@ -520,7 +498,6 @@ if LocalPlayer.Character then
     protectStats(LocalPlayer.Character)
 end
 
--- INIT
 smoothCamCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
