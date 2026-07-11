@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v4.1 (Fly Speed added)
+-- Lock & Avatars Hub v4.2 (Fixed sliders, no auto-apply)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -146,9 +146,9 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU (now with Fly Speed slider)
+-- AVATARS SUB-MENU (with bigger sliders)
 local avatarSub = Instance.new("Frame")
-avatarSub.Size = UDim2.new(0, 220, 0, 250)  -- increased height
+avatarSub.Size = UDim2.new(0, 260, 0, 280)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
 avatarSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 avatarSub.BorderSizePixel = 0
@@ -187,21 +187,21 @@ local backAvatarCorner = Instance.new("UICorner")
 backAvatarCorner.CornerRadius = UDim.new(0, 4)
 backAvatarCorner.Parent = backAvatar
 
--- Speed
+-- Speed (bigger)
 local speedLabel = Instance.new("TextLabel")
-speedLabel.Size = UDim2.new(1, -10, 0, 20)
+speedLabel.Size = UDim2.new(1, -10, 0, 25)
 speedLabel.Position = UDim2.new(0, 5, 0, 40)
 speedLabel.BackgroundTransparency = 1
 speedLabel.Text = "Speed: 16"
 speedLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
 speedLabel.Font = Enum.Font.Gotham
-speedLabel.TextSize = 14
+speedLabel.TextSize = 16
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.Parent = avatarSub
 
 local speedSlider = Instance.new("TextButton")
-speedSlider.Size = UDim2.new(1, -10, 0, 6)
-speedSlider.Position = UDim2.new(0, 5, 0, 65)
+speedSlider.Size = UDim2.new(1, -10, 0, 12)  -- bigger
+speedSlider.Position = UDim2.new(0, 5, 0, 70)
 speedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 speedSlider.BorderSizePixel = 0
 speedSlider.Text = ""
@@ -211,8 +211,8 @@ speedCorner.CornerRadius = UDim.new(1, 0)
 speedCorner.Parent = speedSlider
 
 local speedIndicator = Instance.new("TextButton")
-speedIndicator.Size = UDim2.new(0, 12, 0, 12)
-speedIndicator.Position = UDim2.new(0, 0, 0, -3)
+speedIndicator.Size = UDim2.new(0, 16, 0, 16)  -- bigger
+speedIndicator.Position = UDim2.new(0, 0, 0, -2)
 speedIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 speedIndicator.BorderSizePixel = 0
 speedIndicator.Text = ""
@@ -221,21 +221,21 @@ local speedIndCorner = Instance.new("UICorner")
 speedIndCorner.CornerRadius = UDim.new(1, 0)
 speedIndCorner.Parent = speedIndicator
 
--- Jump
+-- Jump (bigger)
 local jumpLabel = Instance.new("TextLabel")
-jumpLabel.Size = UDim2.new(1, -10, 0, 20)
-jumpLabel.Position = UDim2.new(0, 5, 0, 85)
+jumpLabel.Size = UDim2.new(1, -10, 0, 25)
+jumpLabel.Position = UDim2.new(0, 5, 0, 100)
 jumpLabel.BackgroundTransparency = 1
 jumpLabel.Text = "Jump: 50"
 jumpLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
 jumpLabel.Font = Enum.Font.Gotham
-jumpLabel.TextSize = 14
+jumpLabel.TextSize = 16
 jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
 jumpLabel.Parent = avatarSub
 
 local jumpSlider = Instance.new("TextButton")
-jumpSlider.Size = UDim2.new(1, -10, 0, 6)
-jumpSlider.Position = UDim2.new(0, 5, 0, 110)
+jumpSlider.Size = UDim2.new(1, -10, 0, 12)
+jumpSlider.Position = UDim2.new(0, 5, 0, 130)
 jumpSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 jumpSlider.BorderSizePixel = 0
 jumpSlider.Text = ""
@@ -245,8 +245,8 @@ jumpCorner.CornerRadius = UDim.new(1, 0)
 jumpCorner.Parent = jumpSlider
 
 local jumpIndicator = Instance.new("TextButton")
-jumpIndicator.Size = UDim2.new(0, 12, 0, 12)
-jumpIndicator.Position = UDim2.new(0, 0, 0, -3)
+jumpIndicator.Size = UDim2.new(0, 16, 0, 16)
+jumpIndicator.Position = UDim2.new(0, 0, 0, -2)
 jumpIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 jumpIndicator.BorderSizePixel = 0
 jumpIndicator.Text = ""
@@ -257,34 +257,34 @@ jumpIndCorner.Parent = jumpIndicator
 
 -- Fly button
 local flyBtn = Instance.new("TextButton")
-flyBtn.Size = UDim2.new(0.8, 0, 0, 30)
-flyBtn.Position = UDim2.new(0.1, 0, 0, 135)
+flyBtn.Size = UDim2.new(0.8, 0, 0, 35)
+flyBtn.Position = UDim2.new(0.1, 0, 0, 160)
 flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
 flyBtn.BorderSizePixel = 0
 flyBtn.Text = "Fly: OFF"
 flyBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
 flyBtn.Font = Enum.Font.Gotham
-flyBtn.TextSize = 14
+flyBtn.TextSize = 16
 flyBtn.Parent = avatarSub
 local flyCorner = Instance.new("UICorner")
 flyCorner.CornerRadius = UDim.new(0, 6)
 flyCorner.Parent = flyBtn
 
--- NEW: Fly Speed slider
+-- Fly Speed (bigger)
 local flySpeedLabel = Instance.new("TextLabel")
-flySpeedLabel.Size = UDim2.new(1, -10, 0, 20)
-flySpeedLabel.Position = UDim2.new(0, 5, 0, 175)
+flySpeedLabel.Size = UDim2.new(1, -10, 0, 25)
+flySpeedLabel.Position = UDim2.new(0, 5, 0, 205)
 flySpeedLabel.BackgroundTransparency = 1
 flySpeedLabel.Text = "Fly Speed: 50"
 flySpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
 flySpeedLabel.Font = Enum.Font.Gotham
-flySpeedLabel.TextSize = 14
+flySpeedLabel.TextSize = 16
 flySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
 flySpeedLabel.Parent = avatarSub
 
 local flySpeedSlider = Instance.new("TextButton")
-flySpeedSlider.Size = UDim2.new(1, -10, 0, 6)
-flySpeedSlider.Position = UDim2.new(0, 5, 0, 200)
+flySpeedSlider.Size = UDim2.new(1, -10, 0, 12)
+flySpeedSlider.Position = UDim2.new(0, 5, 0, 235)
 flySpeedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
 flySpeedSlider.BorderSizePixel = 0
 flySpeedSlider.Text = ""
@@ -294,8 +294,8 @@ flySpeedCorner.CornerRadius = UDim.new(1, 0)
 flySpeedCorner.Parent = flySpeedSlider
 
 local flySpeedIndicator = Instance.new("TextButton")
-flySpeedIndicator.Size = UDim2.new(0, 12, 0, 12)
-flySpeedIndicator.Position = UDim2.new(0, 0, 0, -3)
+flySpeedIndicator.Size = UDim2.new(0, 16, 0, 16)
+flySpeedIndicator.Position = UDim2.new(0, 0, 0, -2)
 flySpeedIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 flySpeedIndicator.BorderSizePixel = 0
 flySpeedIndicator.Text = ""
@@ -312,12 +312,12 @@ local flying = false
 local flyLV = nil
 local flyAV = nil
 
--- Values
+-- Values (initial - NOT applied automatically)
 local speedValue = 16
 local jumpValue = 50
 local flySpeedValue = DEFAULT_FLY_SPEED
 
--- Apply speed & jump to character
+-- Apply speed & jump to character (only when slider changes)
 local function applyStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
@@ -329,14 +329,10 @@ end
 -- Update displays
 local function updateSpeedDisplay()
     speedLabel.Text = "Speed: " .. math.floor(speedValue)
-    local char = LocalPlayer.Character
-    if char then applyStats(char) end
 end
 
 local function updateJumpDisplay()
     jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
-    local char = LocalPlayer.Character
-    if char then applyStats(char) end
 end
 
 local function updateFlySpeedDisplay()
@@ -394,7 +390,7 @@ local function toggleFly()
     end
 end
 
--- Fly movement update (uses flySpeedValue)
+-- Fly movement update
 local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
@@ -508,45 +504,64 @@ backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 flyBtn.MouseButton1Click:Connect(toggleFly)
 
--- SLIDER LOGIC
+-- SLIDER LOGIC (easier to grab)
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
-    slider.MouseButton1Down:Connect(function() dragging = true end)
-    slider.MouseButton1Up:Connect(function() dragging = false end)
-    slider.MouseLeave:Connect(function() dragging = false end)
+    local mousePos = Vector2.new()
 
-    local function update(posX)
-        local rel = math.clamp((posX - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+    slider.MouseButton1Down:Connect(function(x, y)
+        dragging = true
+        mousePos = Vector2.new(x, y)
+        -- Snap to click position
+        local rel = math.clamp((x - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
         local val = min + (max - min) * rel
         callback(val)
-        indicator.Position = UDim2.new(rel, -6, 0, -3)
+        indicator.Position = UDim2.new(rel, -8, 0, -2)
         local currentText = label.Text
         local num = string.match(currentText, "(%d+)$")
         if num then
             label.Text = currentText:gsub("%d+$", "") .. math.floor(val)
         end
-    end
-
-    slider.MouseMoved:Connect(function(x, y)
-        if dragging then update(x) end
     end)
 
-    slider.MouseButton1Click:Connect(function(x, y)
-        update(x)
+    slider.MouseButton1Up:Connect(function()
+        dragging = false
+    end)
+
+    slider.MouseLeave:Connect(function()
+        dragging = false
+    end)
+
+    slider.MouseMoved:Connect(function(x, y)
+        if dragging then
+            local rel = math.clamp((x - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
+            local val = min + (max - min) * rel
+            callback(val)
+            indicator.Position = UDim2.new(rel, -8, 0, -2)
+            local currentText = label.Text
+            local num = string.match(currentText, "(%d+)$")
+            if num then
+                label.Text = currentText:gsub("%d+$", "") .. math.floor(val)
+            end
+        end
     end)
 end
 
+-- Speed slider (16-100) - applies when moved
 setupSlider(speedSlider, speedIndicator, speedLabel, 16, 100, function(val)
     speedValue = math.floor(val)
+    applyStats(LocalPlayer.Character)
     updateSpeedDisplay()
 end)
 
+-- Jump slider (40-200) - applies when moved
 setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
     jumpValue = math.floor(val)
+    applyStats(LocalPlayer.Character)
     updateJumpDisplay()
 end)
 
--- Fly Speed slider (min 5, max 120)
+-- Fly Speed slider (5-120) - applies when moved
 setupSlider(flySpeedSlider, flySpeedIndicator, flySpeedLabel, 5, 120, function(val)
     flySpeedValue = math.floor(val)
     updateFlySpeedDisplay()
@@ -592,17 +607,23 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
--- RESPAWN HANDLER
+-- RESPAWN HANDLER (only re-apply if sliders were moved)
 LocalPlayer.CharacterAdded:Connect(function(char)
     wait(0.5)
-    applyStats(char)
+    -- Only apply if values differ from default (user changed them)
+    if speedValue ~= 16 then
+        applyStats(char)
+    end
+    if jumpValue ~= 50 then
+        applyStats(char)
+    end
     if flying then
         wait(0.5)
         startFly()
     end
 end)
 
--- PROTECT Speed & Jump from being reset
+-- PROTECT Speed & Jump from being reset by game
 local function protectStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if not humanoid then return end
