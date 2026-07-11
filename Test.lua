@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v6.3 (Full code + fixed Fly v7.0)
+-- Lock & Avatars Hub v7.0 (Fixed sliders, fly gravity, lock camera) - PART 1
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -25,11 +25,9 @@ btn.Text = "⚙"
 btn.TextScaled = true
 btn.TextColor3 = Color3.fromRGB(0, 200, 255)
 btn.Parent = screenGui
-
 local btnCorner = Instance.new("UICorner")
 btnCorner.CornerRadius = UDim.new(1, 0)
 btnCorner.Parent = btn
-
 local btnStroke = Instance.new("UIStroke")
 btnStroke.Color = Color3.fromRGB(0, 200, 255)
 btnStroke.Thickness = 2
@@ -43,16 +41,13 @@ mainMenu.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 mainMenu.BorderSizePixel = 0
 mainMenu.Visible = false
 mainMenu.Parent = screenGui
-
 local menuCorner = Instance.new("UICorner")
 menuCorner.CornerRadius = UDim.new(0, 10)
 menuCorner.Parent = mainMenu
-
 local menuStroke = Instance.new("UIStroke")
 menuStroke.Color = Color3.fromRGB(0, 200, 255)
 menuStroke.Thickness = 2
 menuStroke.Parent = mainMenu
-
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(1, 0, 0, 30)
 titleLabel.Position = UDim2.new(0, 0, 0, 5)
@@ -106,7 +101,6 @@ local lockSubStroke = Instance.new("UIStroke")
 lockSubStroke.Color = Color3.fromRGB(0, 200, 255)
 lockSubStroke.Thickness = 2
 lockSubStroke.Parent = lockSub
-
 local lockTitle = Instance.new("TextLabel")
 lockTitle.Size = UDim2.new(1, -10, 0, 30)
 lockTitle.Position = UDim2.new(0, 5, 0, 5)
@@ -140,7 +134,6 @@ lockScroll.CanvasSize = UDim2.new(0, 0, 0, 0)
 lockScroll.ScrollBarThickness = 4
 lockScroll.ScrollBarImageColor3 = Color3.fromRGB(0, 200, 255)
 lockScroll.Parent = lockSub
-
 local lockLayout = Instance.new("UIListLayout")
 lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
@@ -209,7 +202,6 @@ speedSlider.Parent = avatarSub
 local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(1, 0)
 speedCorner.Parent = speedSlider
-
 local speedIndicator = Instance.new("TextButton")
 speedIndicator.Size = UDim2.new(0, 16, 0, 16)
 speedIndicator.Position = UDim2.new(0, 0, 0, -2)
@@ -243,7 +235,6 @@ jumpSlider.Parent = avatarSub
 local jumpCorner = Instance.new("UICorner")
 jumpCorner.CornerRadius = UDim.new(1, 0)
 jumpCorner.Parent = jumpSlider
-
 local jumpIndicator = Instance.new("TextButton")
 jumpIndicator.Size = UDim2.new(0, 16, 0, 16)
 jumpIndicator.Position = UDim2.new(0, 0, 0, -2)
@@ -292,7 +283,6 @@ flySpeedSlider.Parent = avatarSub
 local flySpeedCorner = Instance.new("UICorner")
 flySpeedCorner.CornerRadius = UDim.new(1, 0)
 flySpeedCorner.Parent = flySpeedSlider
-
 local flySpeedIndicator = Instance.new("TextButton")
 flySpeedIndicator.Size = UDim2.new(0, 16, 0, 16)
 flySpeedIndicator.Position = UDim2.new(0, 0, 0, -2)
@@ -302,8 +292,7 @@ flySpeedIndicator.Text = ""
 flySpeedIndicator.Parent = flySpeedSlider
 local flySpeedIndCorner = Instance.new("UICorner")
 flySpeedIndCorner.CornerRadius = UDim.new(1, 0)
-flySpeedIndCorner.Parent = flySpeedIndicator
-
+flySpeedIndCorner.Parent = flySpeedIndicator-- Lock & Avatars Hub v7.0 (Part 2) - Logic
 -- STATE
 local target = nil
 local locked = false
@@ -312,6 +301,8 @@ local flying = false
 local flyBV = nil
 local flyBG = nil
 local selectedButton = nil
+local originalGravity = 196.2
+local smoothCamCFrame = Camera.CFrame
 
 -- Values
 local speedValue = 16
@@ -354,6 +345,7 @@ local function startFly()
     flyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
 
     humanoid.PlatformStand = true
+    humanoid.Gravity = 0  -- отключаем гравитацию
 
     flyBV = Instance.new("BodyVelocity")
     flyBV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
@@ -376,6 +368,7 @@ local function stopFly()
         local humanoid = char:FindFirstChild("Humanoid")
         if humanoid then
             humanoid.PlatformStand = false
+            humanoid.Gravity = originalGravity
         end
     end
     if flyBV then flyBV:Destroy() flyBV = nil end
@@ -390,7 +383,7 @@ local function toggleFly()
     end
 end
 
--- ================== НОВАЯ ИСПРАВЛЕННАЯ ФУНКЦИЯ FLY (v7.0) ==================
+-- ================== FLY MOVEMENT (v7.1 - smooth) ==================
 local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
@@ -402,23 +395,19 @@ local function updateFlyMovement()
     local humanoid = char:FindFirstChild("Humanoid")
     if not root or not flyBV or not humanoid then return end
 
-    -- Получаем направление джойстика (MoveDirection уже нормализован)
     local moveDir = humanoid.MoveDirection
     local mag = moveDir.Magnitude
     if mag < 0.01 then
+        -- Не меняем скорость, оставляем 0 – гравитации нет, виснет
         flyBV.Velocity = Vector3.new(0, 0, 0)
         return
     end
 
-    -- Оси камеры
     local camLook = Camera.CFrame.LookVector
     local camRight = Camera.CFrame.RightVector
-
-    -- Проекции ввода на оси камеры (локальные вперёд/назад и влево/вправо)
     local forwardInput = moveDir:Dot(camLook)
     local rightInput = moveDir:Dot(camRight)
 
-    -- Направление движения в мировом пространстве
     local direction = camLook * forwardInput + camRight * rightInput
     if direction.Magnitude > 0 then
         direction = direction.Unit
@@ -426,23 +415,20 @@ local function updateFlyMovement()
         direction = Vector3.new(0, 0, 0)
     end
 
-    -- Итоговая скорость (с учётом силы нажатия джойстика)
     local finalVelocity = direction * flySpeedValue * mag
     flyBV.Velocity = finalVelocity
 
-    -- Поворачиваем персонажа в сторону горизонтальной составляющей движения
     local horizontal = Vector3.new(finalVelocity.X, 0, finalVelocity.Z)
     if horizontal.Magnitude > 0.1 then
         local lookAtPos = root.Position + horizontal
         root.CFrame = CFrame.lookAt(root.Position, lookAtPos, Vector3.new(0, 1, 0))
     end
 
-    -- Держим вертикально (BodyGyro)
     if flyBG then
         flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
     end
 end
--- ========================================================================
+-- ==================================================================
 
 -- LOCK functions with highlight
 local function updateLockList()
@@ -488,6 +474,7 @@ local function updateLockList()
                         selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                         selectedButton = nil
                     end
+                    -- Возвращаем управление камерой (не сбрасываем, но перестаём вмешиваться)
                     return
                 end
                 if selectedButton then
@@ -501,6 +488,8 @@ local function updateLockList()
                 b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
                 selectedButton = b
                 lockSub.Visible = false
+                -- Инициализируем smoothCamCFrame текущим положением камеры
+                smoothCamCFrame = Camera.CFrame
             end)
         end
     end
@@ -544,7 +533,7 @@ backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 flyBtn.MouseButton1Click:Connect(toggleFly)
 
--- SLIDER LOGIC
+-- SLIDER LOGIC (исправлено)
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
 
@@ -553,11 +542,6 @@ local function setupSlider(slider, indicator, label, min, max, callback)
         local val = min + (max - min) * rel
         callback(val)
         indicator.Position = UDim2.new(rel, -8, 0, -2)
-        local currentText = label.Text
-        local num = string.match(currentText, "(%d+)$")
-        if num then
-            label.Text = currentText:gsub("%d+$", "") .. math.floor(val)
-        end
     end
 
     slider.InputBegan:Connect(function(input)
@@ -601,14 +585,14 @@ setupSlider(flySpeedSlider, flySpeedIndicator, flySpeedLabel, 5, 120, function(v
     updateFlySpeedDisplay()
 end)
 
--- CAMERA LOCK
+-- CAMERA LOCK (следование за локальным игроком + взгляд на цель)
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
-        currentCFrame = Camera.CFrame
+        -- Если Lock выключен, не вмешиваемся в камеру
         return
     end
-    local char = target.Character
-    if not char then
+    local targetChar = target.Character
+    if not targetChar then
         locked = false
         target = nil
         btn.Text = "⚙"
@@ -619,16 +603,35 @@ RunService.RenderStepped:Connect(function()
         end
         return
     end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    if root then
-        local targetPos = root.Position
-        local desired = CFrame.lookAt(Camera.CFrame.Position, targetPos)
-        currentCFrame = currentCFrame:Lerp(desired, SMOOTHNESS)
-        Camera.CFrame = currentCFrame
+    local targetRoot = targetChar:FindFirstChild("HumanoidRootPart")
+    if not targetRoot then return end
+
+    local localChar = LocalPlayer.Character
+    if not localChar then return end
+    local localRoot = localChar:FindFirstChild("HumanoidRootPart")
+    if not localRoot then return end
+
+    local targetPos = targetRoot.Position
+    local localPos = localRoot.Position
+
+    -- Направление от локального игрока к цели
+    local dir = (targetPos - localPos)
+    if dir.Magnitude < 0.1 then
+        dir = Camera.CFrame.LookVector -- fallback
+    else
+        dir = dir.Unit
     end
+
+    -- Желаемая позиция камеры: позади локального игрока на 10 и выше на 3
+    local desiredPos = localPos - dir * 10 + Vector3.new(0, 3, 0)
+    local desiredCFrame = CFrame.lookAt(desiredPos, targetPos)
+
+    -- Плавная интерполяция
+    smoothCamCFrame = smoothCamCFrame:Lerp(desiredCFrame, SMOOTHNESS)
+    Camera.CFrame = smoothCamCFrame
 end)
 
--- FLY UPDATE (теперь с новой функцией)
+-- FLY UPDATE
 RunService.RenderStepped:Connect(updateFlyMovement)
 
 -- HOTKEY (only L for unlock)
@@ -687,7 +690,7 @@ if LocalPlayer.Character then
 end
 
 -- INIT
-currentCFrame = Camera.CFrame
+smoothCamCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
 updateFlySpeedDisplay()
