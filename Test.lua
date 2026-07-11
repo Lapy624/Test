@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v7.0 (Fixed sliders, fly gravity, lock camera) - PART 1
+-- Lock & Avatars Hub v8.0 (No Fly, only Lock + Speed + Jump)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -7,7 +7,6 @@ local LocalPlayer = Players.LocalPlayer
 
 -- SETTINGS
 local SMOOTHNESS = 0.2
-local DEFAULT_FLY_SPEED = 50
 
 -- GUI (persistent)
 local screenGui = Instance.new("ScreenGui")
@@ -139,9 +138,9 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU
+-- AVATARS SUB-MENU (без Fly)
 local avatarSub = Instance.new("Frame")
-avatarSub.Size = UDim2.new(0, 260, 0, 280)
+avatarSub.Size = UDim2.new(0, 260, 0, 200)  -- уменьшил высоту
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
 avatarSub.BackgroundColor3 = Color3.fromRGB(18, 18, 28)
 avatarSub.BorderSizePixel = 0
@@ -244,70 +243,18 @@ jumpIndicator.Text = ""
 jumpIndicator.Parent = jumpSlider
 local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
-jumpIndCorner.Parent = jumpIndicator
+jumpIndCorner.Parent = jumpIndicator-- Lock & Avatars Hub v8.0 (Part 2) - Logic without Fly
 
--- Fly button
-local flyBtn = Instance.new("TextButton")
-flyBtn.Size = UDim2.new(0.8, 0, 0, 35)
-flyBtn.Position = UDim2.new(0.1, 0, 0, 160)
-flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-flyBtn.BorderSizePixel = 0
-flyBtn.Text = "Fly: OFF"
-flyBtn.TextColor3 = Color3.fromRGB(200, 200, 220)
-flyBtn.Font = Enum.Font.Gotham
-flyBtn.TextSize = 16
-flyBtn.Parent = avatarSub
-local flyCorner = Instance.new("UICorner")
-flyCorner.CornerRadius = UDim.new(0, 6)
-flyCorner.Parent = flyBtn
-
--- Fly Speed
-local flySpeedLabel = Instance.new("TextLabel")
-flySpeedLabel.Size = UDim2.new(1, -10, 0, 25)
-flySpeedLabel.Position = UDim2.new(0, 5, 0, 205)
-flySpeedLabel.BackgroundTransparency = 1
-flySpeedLabel.Text = "Fly Speed: 50"
-flySpeedLabel.TextColor3 = Color3.fromRGB(200, 200, 220)
-flySpeedLabel.Font = Enum.Font.Gotham
-flySpeedLabel.TextSize = 16
-flySpeedLabel.TextXAlignment = Enum.TextXAlignment.Left
-flySpeedLabel.Parent = avatarSub
-
-local flySpeedSlider = Instance.new("TextButton")
-flySpeedSlider.Size = UDim2.new(1, -10, 0, 12)
-flySpeedSlider.Position = UDim2.new(0, 5, 0, 235)
-flySpeedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-flySpeedSlider.BorderSizePixel = 0
-flySpeedSlider.Text = ""
-flySpeedSlider.Parent = avatarSub
-local flySpeedCorner = Instance.new("UICorner")
-flySpeedCorner.CornerRadius = UDim.new(1, 0)
-flySpeedCorner.Parent = flySpeedSlider
-local flySpeedIndicator = Instance.new("TextButton")
-flySpeedIndicator.Size = UDim2.new(0, 16, 0, 16)
-flySpeedIndicator.Position = UDim2.new(0, 0, 0, -2)
-flySpeedIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
-flySpeedIndicator.BorderSizePixel = 0
-flySpeedIndicator.Text = ""
-flySpeedIndicator.Parent = flySpeedSlider
-local flySpeedIndCorner = Instance.new("UICorner")
-flySpeedIndCorner.CornerRadius = UDim.new(1, 0)
-flySpeedIndCorner.Parent = flySpeedIndicator-- Lock & Avatars Hub v7.0 (Part 2) - Logic
 -- STATE
 local target = nil
 local locked = false
 local currentCFrame = Camera.CFrame
-local flying = false
-local flyBV = nil
-local flyBG = nil
 local selectedButton = nil
-local originalGravity = 196.2
 local smoothCamCFrame = Camera.CFrame
 
 -- Values
 local speedValue = 16
 local jumpValue = 50
-local flySpeedValue = DEFAULT_FLY_SPEED
 
 -- Apply stats to character
 local function applyStats(char)
@@ -326,109 +273,6 @@ end
 local function updateJumpDisplay()
     jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
 end
-
-local function updateFlySpeedDisplay()
-    flySpeedLabel.Text = "Fly Speed: " .. math.floor(flySpeedValue)
-end
-
--- FLY (BodyVelocity + BodyGyro)
-local function startFly()
-    local char = LocalPlayer.Character
-    if not char then return end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not root or not humanoid then return end
-
-    if flying then return end
-    flying = true
-    flyBtn.Text = "Fly: ON"
-    flyBtn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
-
-    humanoid.PlatformStand = true
-    humanoid.Gravity = 0  -- отключаем гравитацию
-
-    flyBV = Instance.new("BodyVelocity")
-    flyBV.MaxForce = Vector3.new(1e9, 1e9, 1e9)
-    flyBV.Velocity = Vector3.new(0, 0, 0)
-    flyBV.Parent = root
-
-    flyBG = Instance.new("BodyGyro")
-    flyBG.MaxTorque = Vector3.new(1e9, 1e9, 1e9)
-    flyBG.CFrame = root.CFrame
-    flyBG.Parent = root
-end
-
-local function stopFly()
-    flying = false
-    flyBtn.Text = "Fly: OFF"
-    flyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
-
-    local char = LocalPlayer.Character
-    if char then
-        local humanoid = char:FindFirstChild("Humanoid")
-        if humanoid then
-            humanoid.PlatformStand = false
-            humanoid.Gravity = originalGravity
-        end
-    end
-    if flyBV then flyBV:Destroy() flyBV = nil end
-    if flyBG then flyBG:Destroy() flyBG = nil end
-end
-
-local function toggleFly()
-    if flying then
-        stopFly()
-    else
-        startFly()
-    end
-end
-
--- ================== FLY MOVEMENT (v7.1 - smooth) ==================
-local function updateFlyMovement()
-    if not flying then return end
-    local char = LocalPlayer.Character
-    if not char then
-        stopFly()
-        return
-    end
-    local root = char:FindFirstChild("HumanoidRootPart")
-    local humanoid = char:FindFirstChild("Humanoid")
-    if not root or not flyBV or not humanoid then return end
-
-    local moveDir = humanoid.MoveDirection
-    local mag = moveDir.Magnitude
-    if mag < 0.01 then
-        -- Не меняем скорость, оставляем 0 – гравитации нет, виснет
-        flyBV.Velocity = Vector3.new(0, 0, 0)
-        return
-    end
-
-    local camLook = Camera.CFrame.LookVector
-    local camRight = Camera.CFrame.RightVector
-    local forwardInput = moveDir:Dot(camLook)
-    local rightInput = moveDir:Dot(camRight)
-
-    local direction = camLook * forwardInput + camRight * rightInput
-    if direction.Magnitude > 0 then
-        direction = direction.Unit
-    else
-        direction = Vector3.new(0, 0, 0)
-    end
-
-    local finalVelocity = direction * flySpeedValue * mag
-    flyBV.Velocity = finalVelocity
-
-    local horizontal = Vector3.new(finalVelocity.X, 0, finalVelocity.Z)
-    if horizontal.Magnitude > 0.1 then
-        local lookAtPos = root.Position + horizontal
-        root.CFrame = CFrame.lookAt(root.Position, lookAtPos, Vector3.new(0, 1, 0))
-    end
-
-    if flyBG then
-        flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
-    end
-end
--- ==================================================================
 
 -- LOCK functions with highlight
 local function updateLockList()
@@ -474,7 +318,6 @@ local function updateLockList()
                         selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                         selectedButton = nil
                     end
-                    -- Возвращаем управление камерой (не сбрасываем, но перестаём вмешиваться)
                     return
                 end
                 if selectedButton then
@@ -488,7 +331,6 @@ local function updateLockList()
                 b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
                 selectedButton = b
                 lockSub.Visible = false
-                -- Инициализируем smoothCamCFrame текущим положением камеры
                 smoothCamCFrame = Camera.CFrame
             end)
         end
@@ -531,9 +373,8 @@ lockBtn.MouseButton1Click:Connect(showLock)
 avatarBtn.MouseButton1Click:Connect(showAvatar)
 backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
-flyBtn.MouseButton1Click:Connect(toggleFly)
 
--- SLIDER LOGIC (исправлено)
+-- SLIDER LOGIC
 local function setupSlider(slider, indicator, label, min, max, callback)
     local dragging = false
 
@@ -580,15 +421,9 @@ setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
     updateJumpDisplay()
 end)
 
-setupSlider(flySpeedSlider, flySpeedIndicator, flySpeedLabel, 5, 120, function(val)
-    flySpeedValue = math.floor(val)
-    updateFlySpeedDisplay()
-end)
-
 -- CAMERA LOCK (следование за локальным игроком + взгляд на цель)
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
-        -- Если Lock выключен, не вмешиваемся в камеру
         return
     end
     local targetChar = target.Character
@@ -614,25 +449,19 @@ RunService.RenderStepped:Connect(function()
     local targetPos = targetRoot.Position
     local localPos = localRoot.Position
 
-    -- Направление от локального игрока к цели
     local dir = (targetPos - localPos)
     if dir.Magnitude < 0.1 then
-        dir = Camera.CFrame.LookVector -- fallback
+        dir = Camera.CFrame.LookVector
     else
         dir = dir.Unit
     end
 
-    -- Желаемая позиция камеры: позади локального игрока на 10 и выше на 3
     local desiredPos = localPos - dir * 10 + Vector3.new(0, 3, 0)
     local desiredCFrame = CFrame.lookAt(desiredPos, targetPos)
 
-    -- Плавная интерполяция
     smoothCamCFrame = smoothCamCFrame:Lerp(desiredCFrame, SMOOTHNESS)
     Camera.CFrame = smoothCamCFrame
 end)
-
--- FLY UPDATE
-RunService.RenderStepped:Connect(updateFlyMovement)
 
 -- HOTKEY (only L for unlock)
 UserInputService.InputBegan:Connect(function(input, processed)
@@ -655,19 +484,15 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     if speedValue ~= 16 or jumpValue ~= 50 then
         applyStats(char)
     end
-    if flying then
-        wait(0.5)
-        startFly()
-    end
 end)
 
--- PROTECT
+-- PROTECT Speed & Jump from reset
 local function protectStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if not humanoid then return end
 
     humanoid:GetPropertyChangedSignal("WalkSpeed"):Connect(function()
-        if humanoid.WalkSpeed ~= speedValue and not flying then
+        if humanoid.WalkSpeed ~= speedValue then
             humanoid.WalkSpeed = speedValue
         end
     end)
@@ -693,4 +518,3 @@ end
 smoothCamCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
-updateFlySpeedDisplay()
