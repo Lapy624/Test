@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v8.0 FINAL (Working Sliders + Lock)
+-- Lock & Avatars Hub v9.0 (Mobile Sliders Fix)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -12,6 +12,7 @@ screenGui.Name = "LockGui"
 screenGui.ResetOnSpawn = false
 screenGui.Parent = LocalPlayer.PlayerGui
 
+-- MAIN BUTTON
 local btn = Instance.new("TextButton")
 btn.Size = UDim2.new(0, 50, 0, 50)
 btn.Position = UDim2.new(0, 10, 0, 10)
@@ -29,6 +30,7 @@ btnStroke.Color = Color3.fromRGB(0, 200, 255)
 btnStroke.Thickness = 2
 btnStroke.Parent = btn
 
+-- MAIN MENU
 local mainMenu = Instance.new("Frame")
 mainMenu.Size = UDim2.new(0, 250, 0, 150)
 mainMenu.Position = UDim2.new(0, 70, 0, 10)
@@ -81,6 +83,7 @@ local avatarCorner = Instance.new("UICorner")
 avatarCorner.CornerRadius = UDim.new(0, 6)
 avatarCorner.Parent = avatarBtn
 
+-- LOCK SUB-MENU
 local lockSub = Instance.new("Frame")
 lockSub.Size = UDim2.new(0, 220, 0, 320)
 lockSub.Position = UDim2.new(0, 70, 0, 10)
@@ -95,7 +98,6 @@ local lockSubStroke = Instance.new("UIStroke")
 lockSubStroke.Color = Color3.fromRGB(0, 200, 255)
 lockSubStroke.Thickness = 2
 lockSubStroke.Parent = lockSub
-
 local lockTitle = Instance.new("TextLabel")
 lockTitle.Size = UDim2.new(1, -10, 0, 30)
 lockTitle.Position = UDim2.new(0, 5, 0, 5)
@@ -134,6 +136,7 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
+-- AVATARS SUB-MENU
 local avatarSub = Instance.new("Frame")
 avatarSub.Size = UDim2.new(0, 260, 0, 200)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
@@ -174,6 +177,7 @@ local backAvatarCorner = Instance.new("UICorner")
 backAvatarCorner.CornerRadius = UDim.new(0, 4)
 backAvatarCorner.Parent = backAvatar
 
+-- SPEED SLIDER (переделано)
 local speedLabel = Instance.new("TextLabel")
 speedLabel.Size = UDim2.new(1, -10, 0, 25)
 speedLabel.Position = UDim2.new(0, 5, 0, 40)
@@ -185,27 +189,28 @@ speedLabel.TextSize = 16
 speedLabel.TextXAlignment = Enum.TextXAlignment.Left
 speedLabel.Parent = avatarSub
 
-local speedSlider = Instance.new("TextButton")
-speedSlider.Size = UDim2.new(1, -10, 0, 12)
-speedSlider.Position = UDim2.new(0, 5, 0, 70)
-speedSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-speedSlider.BorderSizePixel = 0
-speedSlider.Text = ""
-speedSlider.Parent = avatarSub
-local speedCorner = Instance.new("UICorner")
-speedCorner.CornerRadius = UDim.new(1, 0)
-speedCorner.Parent = speedSlider
-local speedIndicator = Instance.new("TextButton")
-speedIndicator.Size = UDim2.new(0, 16, 0, 16)
-speedIndicator.Position = UDim2.new(0, 0, 0, -2)
+local speedTrack = Instance.new("Frame")
+speedTrack.Size = UDim2.new(1, -10, 0, 12)
+speedTrack.Position = UDim2.new(0, 5, 0, 70)
+speedTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+speedTrack.BorderSizePixel = 0
+speedTrack.Parent = avatarSub
+local speedTrackCorner = Instance.new("UICorner")
+speedTrackCorner.CornerRadius = UDim.new(1, 0)
+speedTrackCorner.Parent = speedTrack
+
+local speedIndicator = Instance.new("ImageButton")
+speedIndicator.Size = UDim2.new(0, 20, 0, 20)
+speedIndicator.Position = UDim2.new(0, -10, 0, -4)
 speedIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 speedIndicator.BorderSizePixel = 0
-speedIndicator.Text = ""
-speedIndicator.Parent = speedSlider
+speedIndicator.Image = ""
+speedIndicator.Parent = speedTrack
 local speedIndCorner = Instance.new("UICorner")
 speedIndCorner.CornerRadius = UDim.new(1, 0)
 speedIndCorner.Parent = speedIndicator
 
+-- JUMP SLIDER (переделано)
 local jumpLabel = Instance.new("TextLabel")
 jumpLabel.Size = UDim2.new(1, -10, 0, 25)
 jumpLabel.Position = UDim2.new(0, 5, 0, 100)
@@ -217,27 +222,28 @@ jumpLabel.TextSize = 16
 jumpLabel.TextXAlignment = Enum.TextXAlignment.Left
 jumpLabel.Parent = avatarSub
 
-local jumpSlider = Instance.new("TextButton")
-jumpSlider.Size = UDim2.new(1, -10, 0, 12)
-jumpSlider.Position = UDim2.new(0, 5, 0, 130)
-jumpSlider.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
-jumpSlider.BorderSizePixel = 0
-jumpSlider.Text = ""
-jumpSlider.Parent = avatarSub
-local jumpCorner = Instance.new("UICorner")
-jumpCorner.CornerRadius = UDim.new(1, 0)
-jumpCorner.Parent = jumpSlider
-local jumpIndicator = Instance.new("TextButton")
-jumpIndicator.Size = UDim2.new(0, 16, 0, 16)
-jumpIndicator.Position = UDim2.new(0, 0, 0, -2)
+local jumpTrack = Instance.new("Frame")
+jumpTrack.Size = UDim2.new(1, -10, 0, 12)
+jumpTrack.Position = UDim2.new(0, 5, 0, 130)
+jumpTrack.BackgroundColor3 = Color3.fromRGB(60, 60, 80)
+jumpTrack.BorderSizePixel = 0
+jumpTrack.Parent = avatarSub
+local jumpTrackCorner = Instance.new("UICorner")
+jumpTrackCorner.CornerRadius = UDim.new(1, 0)
+jumpTrackCorner.Parent = jumpTrack
+
+local jumpIndicator = Instance.new("ImageButton")
+jumpIndicator.Size = UDim2.new(0, 20, 0, 20)
+jumpIndicator.Position = UDim2.new(0, -10, 0, -4)
 jumpIndicator.BackgroundColor3 = Color3.fromRGB(0, 200, 255)
 jumpIndicator.BorderSizePixel = 0
-jumpIndicator.Text = ""
-jumpIndicator.Parent = jumpSlider
+jumpIndicator.Image = ""
+jumpIndicator.Parent = jumpTrack
 local jumpIndCorner = Instance.new("UICorner")
 jumpIndCorner.CornerRadius = UDim.new(1, 0)
 jumpIndCorner.Parent = jumpIndicator
-
+-- Lock & Avatars Hub v9.0 (Part 2)
+-- STATE
 local target = nil
 local locked = false
 local selectedButton = nil
@@ -246,6 +252,7 @@ local smoothCamCFrame = Camera.CFrame
 local speedValue = 16
 local jumpValue = 50
 
+-- Применение статов к персонажу
 local function applyStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if humanoid then
@@ -254,6 +261,7 @@ local function applyStats(char)
     end
 end
 
+-- Обновление текста
 local function updateSpeedDisplay()
     speedLabel.Text = "Speed: " .. math.floor(speedValue)
 end
@@ -262,6 +270,68 @@ local function updateJumpDisplay()
     jumpLabel.Text = "Jump: " .. math.floor(jumpValue)
 end
 
+-- Функция для создания универсального слайдера (работает на ПК и телефоне)
+local function setupSlider(track, indicator, label, minVal, maxVal, callback)
+    local dragging = false
+    local dragConn = nil
+    local endConn = nil
+
+    local function updateFromPosition(inputPos)
+        local trackAbsPos = track.AbsolutePosition
+        local trackSize = track.AbsoluteSize.X
+        local rel = (inputPos.X - trackAbsPos.X) / trackSize
+        rel = math.clamp(rel, 0, 1)
+        local val = minVal + (maxVal - minVal) * rel
+        callback(math.floor(val))
+        indicator.Position = UDim2.new(rel, -10, 0, -4)
+        -- Обновляем текст лейбла
+        local labelText = label.Text:gsub("%d+$", "") .. math.floor(val)
+        label.Text = labelText
+    end
+
+    -- Начало перетаскивания
+    local function startDrag(input)
+        if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+            dragging = true
+            updateFromPosition(input.Position)
+            -- Подписываемся на изменение позиции глобально
+            if dragConn then dragConn:Disconnect() end
+            if endConn then endConn:Disconnect() end
+            dragConn = UserInputService.InputChanged:Connect(function(inputChanged)
+                if dragging and (inputChanged.UserInputType == Enum.UserInputType.MouseMovement or inputChanged.UserInputType == Enum.UserInputType.Touch) then
+                    updateFromPosition(inputChanged.Position)
+                end
+            end)
+            endConn = UserInputService.InputEnded:Connect(function(inputEnded)
+                if inputEnded.UserInputType == Enum.UserInputType.MouseButton1 or inputEnded.UserInputType == Enum.UserInputType.Touch then
+                    dragging = false
+                    if dragConn then dragConn:Disconnect() dragConn = nil end
+                    if endConn then endConn:Disconnect() endConn = nil end
+                end
+            end)
+        end
+    end
+
+    -- События на треке (начало перетаскивания)
+    track.InputBegan:Connect(startDrag)
+    -- Также на индикаторе, чтобы можно было схватить его
+    indicator.InputBegan:Connect(startDrag)
+end
+
+-- Настройка слайдеров
+setupSlider(speedTrack, speedIndicator, speedLabel, 16, 100, function(val)
+    speedValue = val
+    applyStats(LocalPlayer.Character)
+    updateSpeedDisplay()
+end)
+
+setupSlider(jumpTrack, jumpIndicator, jumpLabel, 40, 200, function(val)
+    jumpValue = val
+    applyStats(LocalPlayer.Character)
+    updateJumpDisplay()
+end)
+
+-- LOCK LIST
 local function updateLockList()
     for _, child in ipairs(lockScroll:GetChildren()) do
         if child:IsA("TextButton") then
@@ -327,6 +397,7 @@ local function updateLockList()
     lockScroll.CanvasSize = UDim2.new(0, 0, 0, count * 38 + 10)
 end
 
+-- NAVIGATION
 local function showMain()
     mainMenu.Visible = true
     lockSub.Visible = false
@@ -344,6 +415,7 @@ local function showAvatar()
     avatarSub.Visible = true
 end
 
+-- BUTTON EVENTS
 btn.MouseButton1Click:Connect(function()
     if mainMenu.Visible or lockSub.Visible or avatarSub.Visible then
         mainMenu.Visible = false
@@ -359,56 +431,7 @@ avatarBtn.MouseButton1Click:Connect(showAvatar)
 backLock.MouseButton1Click:Connect(showMain)
 backAvatar.MouseButton1Click:Connect(showMain)
 
-local function setupSlider(slider, indicator, label, min, max, callback)
-    local dragging = false
-
-    local function update(posX)
-        local rel = math.clamp((posX - slider.AbsolutePosition.X) / slider.AbsoluteSize.X, 0, 1)
-        local val = min + (max - min) * rel
-        callback(val)
-        indicator.Position = UDim2.new(rel, -8, 0, -2)
-    end
-
-    slider.InputBegan:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = true
-            update(input.Position.X)
-        end
-    end)
-
-    slider.InputEnded:Connect(function(input)
-        if input.UserInputType == Enum.UserInputType.MouseButton1 then
-            dragging = false
-        end
-    end)
-
-    slider.InputChanged:Connect(function(input)
-        if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-            update(input.Position.X)
-        end
-    end)
-
-    slider.MouseLeave:Connect(function()
-        dragging = false
-    end)
-
-    slider.MouseButton1Click:Connect(function(x)
-        update(x)
-    end)
-end
-
-setupSlider(speedSlider, speedIndicator, speedLabel, 16, 100, function(val)
-    speedValue = math.floor(val)
-    applyStats(LocalPlayer.Character)
-    updateSpeedDisplay()
-end)
-
-setupSlider(jumpSlider, jumpIndicator, jumpLabel, 40, 200, function(val)
-    jumpValue = math.floor(val)
-    applyStats(LocalPlayer.Character)
-    updateJumpDisplay()
-end)
-
+-- CAMERA LOCK
 RunService.RenderStepped:Connect(function()
     if not locked or not target then
         return
@@ -450,6 +473,7 @@ RunService.RenderStepped:Connect(function()
     Camera.CFrame = smoothCamCFrame
 end)
 
+-- HOTKEY L
 UserInputService.InputBegan:Connect(function(input, processed)
     if processed then return end
     if input.KeyCode == Enum.KeyCode.L and locked then
@@ -464,6 +488,7 @@ UserInputService.InputBegan:Connect(function(input, processed)
     end
 end)
 
+-- RESPAWN
 LocalPlayer.CharacterAdded:Connect(function(char)
     wait(0.5)
     if speedValue ~= 16 or jumpValue ~= 50 then
@@ -471,6 +496,7 @@ LocalPlayer.CharacterAdded:Connect(function(char)
     end
 end)
 
+-- PROTECT STATS
 local function protectStats(char)
     local humanoid = char and char:FindFirstChild("Humanoid")
     if not humanoid then return end
@@ -498,6 +524,7 @@ if LocalPlayer.Character then
     protectStats(LocalPlayer.Character)
 end
 
+-- INIT
 smoothCamCFrame = Camera.CFrame
 updateSpeedDisplay()
 updateJumpDisplay()
