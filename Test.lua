@@ -1,4 +1,4 @@
--- Lock & Avatars Hub v6.2 (Full code + fixed Fly)
+-- Lock & Avatars Hub v6.3 (Full code + fixed Fly v7.0)
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -146,7 +146,7 @@ lockLayout.SortOrder = Enum.SortOrder.Name
 lockLayout.Padding = UDim.new(0, 6)
 lockLayout.Parent = lockScroll
 
--- AVATARS SUB-MENU (Fly only, no vertical buttons)
+-- AVATARS SUB-MENU
 local avatarSub = Instance.new("Frame")
 avatarSub.Size = UDim2.new(0, 260, 0, 280)
 avatarSub.Position = UDim2.new(0, 70, 0, 10)
@@ -311,7 +311,7 @@ local currentCFrame = Camera.CFrame
 local flying = false
 local flyBV = nil
 local flyBG = nil
-local selectedButton = nil  -- for lock highlight
+local selectedButton = nil
 
 -- Values
 local speedValue = 16
@@ -390,7 +390,7 @@ local function toggleFly()
     end
 end
 
--- ================== ИСПРАВЛЕННАЯ ФУНКЦИЯ FLY (v6.1) ==================
+-- ================== НОВАЯ ИСПРАВЛЕННАЯ ФУНКЦИЯ FLY (v7.0) ==================
 local function updateFlyMovement()
     if not flying then return end
     local char = LocalPlayer.Character
@@ -405,41 +405,47 @@ local function updateFlyMovement()
     -- Получаем направление джойстика (MoveDirection уже нормализован)
     local moveDir = humanoid.MoveDirection
     local mag = moveDir.Magnitude
-    if mag == 0 then
+    if mag < 0.01 then
         flyBV.Velocity = Vector3.new(0, 0, 0)
         return
     end
 
-    -- Направление камеры (LookVector) и правый вектор
-    local look = Camera.CFrame.LookVector
-    local right = Camera.CFrame.RightVector
+    -- Оси камеры
+    local camLook = Camera.CFrame.LookVector
+    local camRight = Camera.CFrame.RightVector
 
-    -- Нормализованный ввод (mag может быть меньше 1, если джойстик не до конца)
-    local input = moveDir / mag
+    -- Проекции ввода на оси камеры (локальные вперёд/назад и влево/вправо)
+    local forwardInput = moveDir:Dot(camLook)
+    local rightInput = moveDir:Dot(camRight)
 
-    -- Составляем направление полёта:
-    -- вперёд/назад = input.Z * look (с учётом вертикали)
-    -- влево/вправо = input.X * right
-    local direction = look * input.Z + right * input.X
+    -- Направление движения в мировом пространстве
+    local direction = camLook * forwardInput + camRight * rightInput
     if direction.Magnitude > 0 then
         direction = direction.Unit
     else
         direction = Vector3.new(0, 0, 0)
     end
 
-    -- Применяем скорость (mag учитывает силу нажатия джойстика)
-    flyBV.Velocity = direction * flySpeedValue * mag
+    -- Итоговая скорость (с учётом силы нажатия джойстика)
+    local finalVelocity = direction * flySpeedValue * mag
+    flyBV.Velocity = finalVelocity
 
-    -- Держим персонажа вертикально (опционально)
+    -- Поворачиваем персонажа в сторону горизонтальной составляющей движения
+    local horizontal = Vector3.new(finalVelocity.X, 0, finalVelocity.Z)
+    if horizontal.Magnitude > 0.1 then
+        local lookAtPos = root.Position + horizontal
+        root.CFrame = CFrame.lookAt(root.Position, lookAtPos, Vector3.new(0, 1, 0))
+    end
+
+    -- Держим вертикально (BodyGyro)
     if flyBG then
         flyBG.CFrame = CFrame.new(root.Position, root.Position + Vector3.new(0, 1, 0))
     end
 end
--- ==================================================================
+-- ========================================================================
 
 -- LOCK functions with highlight
 local function updateLockList()
-    -- Clear old buttons
     for _, child in ipairs(lockScroll:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
@@ -467,7 +473,6 @@ local function updateLockList()
             stroke.Thickness = 1
             stroke.Parent = b
 
-            -- If this player is currently locked, highlight
             if locked and target == plr then
                 b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
                 selectedButton = b
@@ -475,20 +480,16 @@ local function updateLockList()
 
             b.MouseButton1Click:Connect(function()
                 if locked and target == plr then
-                    -- Unlock
                     locked = false
                     target = nil
                     btn.Text = "⚙"
                     btn.BackgroundColor3 = Color3.fromRGB(25, 25, 35)
-                    -- Remove highlight
                     if selectedButton then
                         selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                         selectedButton = nil
                     end
                     return
                 end
-                -- Lock to new player
-                -- Remove old highlight
                 if selectedButton then
                     selectedButton.BackgroundColor3 = Color3.fromRGB(30, 30, 45)
                     selectedButton = nil
@@ -497,7 +498,6 @@ local function updateLockList()
                 locked = true
                 btn.Text = "🔓"
                 btn.BackgroundColor3 = Color3.fromRGB(0, 100, 150)
-                -- Highlight new button
                 b.BackgroundColor3 = Color3.fromRGB(0, 100, 200)
                 selectedButton = b
                 lockSub.Visible = false
@@ -628,7 +628,7 @@ RunService.RenderStepped:Connect(function()
     end
 end)
 
--- FLY UPDATE (вызов обновлённой функции)
+-- FLY UPDATE (теперь с новой функцией)
 RunService.RenderStepped:Connect(updateFlyMovement)
 
 -- HOTKEY (only L for unlock)
